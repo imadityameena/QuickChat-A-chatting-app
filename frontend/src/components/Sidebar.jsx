@@ -49,6 +49,23 @@ const Sidebar = () => {
   const [themeMode, setThemeMode] = useTheme();
 
   const [search, setSearch] = useState("");
+  // Show only friends who are online right now (remembered on this device)
+  const [onlineOnly, setOnlineOnly] = useState(() => {
+    try {
+      return localStorage.getItem("chatsOnlineOnly") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleOnlineOnly = () =>
+    setOnlineOnly((on) => {
+      try {
+        localStorage.setItem("chatsOnlineOnly", on ? "0" : "1");
+      } catch {
+        // storage blocked: the toggle still works for this visit
+      }
+      return !on;
+    });
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification === "undefined" ? "unsupported" : Notification.permission
   );
@@ -71,14 +88,13 @@ const Sidebar = () => {
     };
   }, [menuOpen]);
 
-  const query = search.trim().toLowerCase();
-  const filteredUsers = query
-    ? users.filter(
-        (user) =>
-          user.fullName.toLowerCase().includes(query) ||
-          user.username?.includes(query.replace(/^@/, ""))
-      )
-    : users;
+  const query = search.trim().toLowerCase().replace(/^@/, "");
+  const onlineCount = users.filter((u) => onlineUsers.includes(u._id)).length;
+  const filteredUsers = users.filter(
+    (user) =>
+      (!onlineOnly || onlineUsers.includes(user._id)) &&
+      (!query || user.fullName.toLowerCase().includes(query) || user.username?.includes(query))
+  );
 
   const enableNotifications = async () => {
     setMenuOpen(false);
@@ -182,6 +198,31 @@ const Sidebar = () => {
             />
           </label>
         )}
+
+        {users.length > 0 && (
+          <div className="mt-3 flex items-center justify-between px-1">
+            <span className="text-sm text-muted">
+              Show online only <span className="text-subtle">· {onlineCount} online</span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={onlineOnly}
+              aria-label="Show online friends only"
+              title="Show online friends only"
+              onClick={toggleOnlineOnly}
+              className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
+                onlineOnly ? "bg-online" : "bg-surface-3"
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  onlineOnly ? "translate-x-4" : ""
+                }`}
+              />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -200,7 +241,24 @@ const Sidebar = () => {
           </div>
         )}
         {users.length > 0 && filteredUsers.length === 0 && (
-          <p className="text-center text-sm text-muted mt-6">No chats match your search</p>
+          <div className="text-center mt-8 px-4">
+            <p className="text-sm text-muted">
+              {onlineOnly && !query
+                ? "None of your friends are online right now"
+                : onlineOnly
+                ? "No online friends match your search"
+                : "No chats match your search"}
+            </p>
+            {onlineOnly && (
+              <button
+                type="button"
+                onClick={toggleOnlineOnly}
+                className="mt-2 text-sm font-medium text-accent-text hover:underline cursor-pointer"
+              >
+                Show all chats
+              </button>
+            )}
+          </div>
         )}
 
         <div className="flex flex-col gap-0.5">
