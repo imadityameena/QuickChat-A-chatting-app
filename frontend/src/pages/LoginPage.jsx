@@ -2,6 +2,11 @@ import React, { useContext, useState } from "react";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
 
+const inputClass =
+  "p-2 bg-transparent border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500";
+const buttonClass =
+  "py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed";
+
 const LoginPage = () => {
   const [currState, setCurrState] = useState("Sign up");
   const [fullName, setFullName] = useState("");
@@ -9,87 +14,82 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const {login} = useContext(AuthContext)
+  const { login } = useContext(AuthContext);
+  const isSignup = currState === "Sign up";
 
-  const onSubmitHandler = (event) => {
+  const switchTo = (state) => {
+    setCurrState(state);
+    setIsDataSubmitted(false);
+    setPassword("");
+  };
+
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    if (currState === "Sign up" && !isDataSubmitted) {
-      // ✅ Step 1 done, show bio screen next
+    // Sign up has two steps: details first, then bio
+    if (isSignup && !isDataSubmitted) {
       setIsDataSubmitted(true);
       return;
     }
 
-    login(currState === "Sign up" ? 'signup' : 'login', {fullName, email, password, bio})
-
-
-    // ✅ Final submit after bio
-    // console.log({ fullName, email, password, bio });
-    // alert("Account created!");
+    setSubmitting(true);
+    const credentials = isSignup ? { fullName, email, password, bio } : { email, password };
+    await login(isSignup ? "signup" : "login", credentials);
+    setSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl">
-      {/* -------- left -------- */}
-      <img src={assets.logo_big} alt="" className="w-[min(30vw,250px)]" />
+    <div className="min-h-screen flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl p-4">
+      <img src={assets.logo_big} alt="QuickChat" className="w-[min(30vw,250px)]" />
 
-      {/* -------- right -------- */}
       <form
         onSubmit={onSubmitHandler}
-        className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-6 rounded-lg shadow-lg w-[min(90vw,400px)]"
+        className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-5 rounded-lg shadow-lg w-[min(90vw,400px)]"
       >
-
-
-
-
-        {/* ✅ Bio Step UI */}
-
-
-        {currState === "Sign up" && isDataSubmitted ? (
+        {isSignup && isDataSubmitted ? (
           <>
             <h2 className="font-medium text-2xl flex justify-between items-center">
-              Add Your Bio
-              <img
+              Add your bio
+              <button
+                type="button"
+                aria-label="Back"
                 onClick={() => setIsDataSubmitted(false)}
-                src={assets.arrow_icon}
-                alt="back"
-                className="w-5 cursor-pointer"
-              />
+                className="cursor-pointer"
+              >
+                <img src={assets.arrow_icon} alt="" className="w-5" />
+              </button>
             </h2>
 
             <textarea
               onChange={(e) => setBio(e.target.value)}
               value={bio}
               rows={4}
-              className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              maxLength={200}
+              className={inputClass}
               placeholder="Provide a short bio..."
               required
-            ></textarea>
+              autoFocus
+            />
+            <p className="-mt-3 text-right text-xs text-gray-400">{bio.length}/200</p>
 
-            <button
-              type="submit"
-              className="py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer"
-            >
-              Create Account
+            <button type="submit" disabled={submitting} className={buttonClass}>
+              {submitting ? "Creating account…" : "Create Account"}
             </button>
           </>
         ) : (
-
-
-          
-          //  ✅Original Form UI
           <>
-            <h2 className="font-medium text-2xl flex justify-between items-center">
-              {currState}
-            </h2>
+            <h2 className="font-medium text-2xl">{currState}</h2>
 
-            {currState === "Sign up" && (
+            {isSignup && (
               <input
                 onChange={(e) => setFullName(e.target.value)}
                 value={fullName}
                 type="text"
-                className="p-2 border border-gray-500 rounded-md focus:outline-none"
+                maxLength={50}
+                autoComplete="name"
+                className={inputClass}
                 placeholder="Full Name"
                 required
               />
@@ -99,58 +99,44 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               value={email}
               type="email"
+              autoComplete="email"
               placeholder="Email Address"
               required
-              className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
             />
 
             <input
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               type="password"
-              placeholder="Password"
+              autoComplete={isSignup ? "new-password" : "current-password"}
+              placeholder={isSignup ? "Password (min. 6 characters)" : "Password"}
+              minLength={isSignup ? 6 : undefined}
               required
-              className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
             />
 
-            <button
-              type="submit"
-              className="py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer"
-            >
-              {currState === "Sign up" ? "Next" : "Login Now"}
+            <button type="submit" disabled={submitting} className={buttonClass}>
+              {isSignup ? "Next" : submitting ? "Logging in…" : "Login Now"}
             </button>
 
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <input type="checkbox" />
-              <p>Agree to the terms of use & privacy policy.</p>
-            </div>
+            {isSignup && (
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" required />
+                Agree to the terms of use & privacy policy.
+              </label>
+            )}
 
-            <div className="flex flex-col gap-2">
-              {currState === "Sign up" ? (
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <span
-                    onClick={() => {
-                      setCurrState("Login");
-                      setIsDataSubmitted(false);
-                    }}
-                    className="font-medium text-violet-500 cursor-pointer"
-                  >
-                    Login here
-                  </span>
-                </p>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  Create an account{" "}
-                  <span
-                    onClick={() => setCurrState("Sign up")}
-                    className="font-medium text-violet-500 cursor-pointer"
-                  >
-                    Click here
-                  </span>
-                </p>
-              )}
-            </div>
+            <p className="text-sm text-gray-400">
+              {isSignup ? "Already have an account? " : "Don't have an account? "}
+              <button
+                type="button"
+                onClick={() => switchTo(isSignup ? "Login" : "Sign up")}
+                className="font-medium text-violet-400 cursor-pointer hover:underline"
+              >
+                {isSignup ? "Login here" : "Sign up"}
+              </button>
+            </p>
           </>
         )}
       </form>

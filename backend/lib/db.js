@@ -1,20 +1,11 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "../constants.js";
 
-//function to connect to the mongodb database
+// Connect to MongoDB. Throws if the connection fails so the server doesn't
+// start in a broken state.
+export const connectDB = async () => {
+  mongoose.connection.on("connected", () => console.log("Database connected"));
+  mongoose.connection.on("error", (err) => console.error("Database error:", err.message));
 
-export const connectDB = async() => {
-  try {
-
-   
-
-    await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)  //actual connection
-
-     mongoose.connection.on('connected', () => console.log('Database connected'))
-
-  } catch (error) {
-
-    console.log('Unable to connect to the database', error);
-
-  }
-}
+  await mongoose.connect(process.env.MONGODB_URI, { dbName: DB_NAME });
+};

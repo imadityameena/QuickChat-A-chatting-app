@@ -1,121 +1,134 @@
+import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
-import cloudinary from "../lib/cloudinary.js";
-import { io, userSocketMap } from "../server.js";
+import { uploadImage } from "../lib/cloudinary.js";
+import { isDataUrlImage } from "../lib/utils.js";
+import { emitToUser } from "../lib/socket.js";
 
-//get all users except the logged in user
+const invalidId = (res) =>
+  res.status(400).json({ success: false, message: "Invalid user id" });
 
+// Get all users except the logged-in one, with unread counts and the
+// last message of each conversation (most recent conversations first)
 export const getUsersForSidebar = async (req, res) => {
-  try {
-    const userId = req.user._id; //got user._id from auth.middleware.js's protectRoute
-    const filteredUsers = await User.find({
-      _id: { $ne: userId }, //$ne = not equal to
-    }).select("-password");
+  const myId = req.user._id;
 
-    //count the no. of messages not seen
+  const [users, unseenCounts, lastMessages] = await Promise.all([
+    User.find({ _id: { $ne: myId } }).lean(),
+    Message.aggregate([
+      { $match: { receiverId: myId, seen: false } },
+      { $group: { _id: "$senderId", count: { $sum: 1 } } },
+    ]),
+    Message.aggregate([
+      { $match: { $or: [{ senderId: myId }, { receiverId: myId }] } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: { $cond: [{ $eq: ["$senderId", myId] }, "$receiverId", "$senderId"] },
+          message: { $first: "$$ROOT" },
+        },
+      },
+    ]),
+  ]);
 
-    const unseenMessages = {};
-    const promises = filteredUsers.map(async (user) => {
-      const messages = await Message.find({
-        senderId: user._id,
-        receiverId: userId,
-        seen: false,
-      });
+  const unseenMessages = {};
+  for (const { _id, count } of unseenCounts) unseenMessages[_id] = count;
 
-      if (messages.length > 0) {
-        unseenMessages[user._id] = messages.length;
-      }
-    });
-
-    await Promise.all(promises);
-    res.json({
-      success: true,
-      users: filteredUsers,
-      unseenMessages,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  const lastByUser = {};
+  for (const { _id, message } of lastMessages) {
+    lastByUser[_id] = {
+      text: message.text,
+      image: Boolean(message.image),
+      senderId: message.senderId,
+      createdAt: message.createdAt,
+    };
   }
+
+  const result = users
+    .map((user) => ({ ...user, lastMessage: lastByUser[user._id] || null }))
+    .sort((a, b) => {
+      const ta = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const tb = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return tb - ta || a.fullName.localeCompare(b.fullName);
+    });
+
+  res.json({ success: true, users: result, unseenMessages });
 };
 
-//get all messages for selected users
-
+// Get the conversation with a user and mark their messages to me as seen
 export const getMessages = async (req, res) => {
-  try {
-    const { id: selectedUserId } = req.params;
-    const myId = req.user._id;
+  const { id: selectedUserId } = req.params;
+  const myId = req.user._id;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: selectedUserId },
-        { senderId: selectedUserId, receiverId: myId },
-      ],
-    });
-    await Message.updateMany(
+  if (!mongoose.isValidObjectId(selectedUserId)) return invalidId(res);
+
+  const messages = await Message.find({
+    $or: [
+      { senderId: myId, receiverId: selectedUserId },
       { senderId: selectedUserId, receiverId: myId },
-      { seen: true }
-    );
+    ],
+  }).sort({ createdAt: 1 });
 
-    res.json({
-      success: true,
-      messages,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.json({ success: false, message: error.message });
-  }
+  const { modifiedCount } = await Message.updateMany(
+    { senderId: selectedUserId, receiverId: myId, seen: false },
+    { seen: true }
+  );
+
+  // Let the other person know their messages were read
+  if (modifiedCount > 0) emitToUser(selectedUserId, "messagesSeen", { by: String(myId) });
+
+  res.json({ success: true, messages });
 };
 
-// api to mark message as seen using message id
-export const markMessageAsSeen = async (req, res)=>{
-    try {
-        const {id} = req.params;
-        await Message.findByIdAndUpdate(id, {seen:true})
-        res.json({success: true})
-    } catch (error) {
-         console.log(error.message);
-         res.json({success:false, message: error.message})
-    }
-}
-
-//send message to selected User
-
-export const sendMessage = async (req, res) => {
-  try {
-    const { text, image } = req.body;
-    const receiverId = req.params.id;
-    const senderId = req.user._id;
-
-    let imageUrl;
-    if (image) {
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
-    }
-
-    const newMessage = await Message.create({
-      senderId,
-      receiverId,
-      text,
-      image: imageUrl,
-    });
-
-    //Emit the new messages to the receivers socket
-
-    const receiverSocketId = userSocketMap[receiverId];
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
-
-    res.json({
-      success: true,
-      newMessage,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.json({ success: false, message: error.message });
+// Mark a single message as seen (only the receiver can do this)
+export const markMessageAsSeen = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ success: false, message: "Invalid message id" });
   }
+
+  const message = await Message.findOneAndUpdate(
+    { _id: id, receiverId: req.user._id },
+    { seen: true }
+  );
+  if (!message) {
+    return res.status(404).json({ success: false, message: "Message not found" });
+  }
+
+  emitToUser(message.senderId, "messagesSeen", { by: String(req.user._id) });
+  res.json({ success: true });
+};
+
+// Send a message (text and/or image) to a user
+export const sendMessage = async (req, res) => {
+  const { image } = req.body;
+  const text = typeof req.body.text === "string" ? req.body.text.trim() : "";
+  const receiverId = req.params.id;
+  const senderId = req.user._id;
+
+  if (!mongoose.isValidObjectId(receiverId)) return invalidId(res);
+  if (!text && !image) {
+    return res.status(400).json({ success: false, message: "Message can't be empty" });
+  }
+  if (image && !isDataUrlImage(image)) {
+    return res.status(400).json({ success: false, message: "Unsupported image format" });
+  }
+  if (!(await User.exists({ _id: receiverId }))) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  const imageUrl = image ? await uploadImage(image, "messages") : undefined;
+
+  const newMessage = await Message.create({
+    senderId,
+    receiverId,
+    text: text || undefined,
+    image: imageUrl,
+  });
+
+  // Deliver in real time to the receiver (and the sender's other tabs)
+  emitToUser(receiverId, "newMessage", newMessage);
+  emitToUser(senderId, "messageSent", newMessage);
+
+  res.status(201).json({ success: true, newMessage });
 };

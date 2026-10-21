@@ -1,97 +1,104 @@
-import { generateToken } from "../lib/utils.js";
-import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../lib/cloudinary.js";
+import User from "../models/user.model.js";
+import { generateToken, isDataUrlImage } from "../lib/utils.js";
+import { uploadImage } from "../lib/cloudinary.js";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
 
-// Signup a new user
-export const signup = async (req,res)=>{
-    const {fullName, email, password, bio} = req.body;
+// Errors thrown in these async handlers are caught by Express 5 and
+// passed to the error handler in server.js.
 
-    try {
-        if(!fullName || !email || !password || !bio){
-            return res.json({success:false, message: "Missing details"});
-        }
-        const user = await User.findOne({email});
+// Sign up a new user
+export const signup = async (req, res) => {
+  const { fullName, email, password, bio } = req.body;
 
-        if(user){
-            return res.json({success:false, message:"Account already exists"})
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = await User.create({
-            fullName, email , password: hashedPassword , bio
-        });
-
-        const token = generateToken(newUser._id)
-
-        res.json({success:true , userData: newUser, token, message:"Account created successfully"})
-
-    } catch (error) {
-        console.log(error.message)
-        res.json({success:false , message:error.message})
-    }
-}
-
-// controller to login a user
-
-export const login = async (req, res)=>{
-    try {
-        const {email, password} = req.body;
-        const userData = await User.findOne({email})
-
-     //   if (!userData) {
-   //  return res.json({ success: false, message: "Invalid email or password" });
-   // }
-
-        const isPasswordCorrect = await bcrypt.compare(password , userData.password);  
-        
-        if(!isPasswordCorrect){
-            return res.json({success:false, message:"Invalid Credentials"})
-        }
-    //  Generate token
-    const token = generateToken(userData._id);
-
-    // Send success response
-    res.json({
-      success: true,
-      userData,
-      token,
-      message: "Login successful"
+  if (!fullName?.trim() || !email?.trim() || !password) {
+    return res.status(400).json({ success: false, message: "Missing details" });
+  }
+  if (!EMAIL_REGEX.test(email.trim())) {
+    return res.status(400).json({ success: false, message: "Please enter a valid email" });
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return res.status(400).json({
+      success: false,
+      message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
     });
+  }
 
-    } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: "Something went wrong" });
+  const normalizedEmail = email.trim().toLowerCase();
+  if (await User.exists({ email: normalizedEmail })) {
+    return res.status(409).json({ success: false, message: "Account already exists" });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = await User.create({
+    fullName,
+    email: normalizedEmail,
+    password: hashedPassword,
+    bio: bio || "",
+  });
+
+  res.status(201).json({
+    success: true,
+    userData: newUser,
+    token: generateToken(newUser._id),
+    message: "Account created successfully",
+  });
+};
+
+// Log in an existing user
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email?.trim() || !password) {
+    return res.status(400).json({ success: false, message: "Email and password are required" });
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password");
+  const isPasswordCorrect = user && (await bcrypt.compare(password, user.password));
+
+  if (!isPasswordCorrect) {
+    return res.status(401).json({ success: false, message: "Invalid email or password" });
+  }
+
+  res.json({
+    success: true,
+    userData: user, // password is stripped by the model's toJSON
+    token: generateToken(user._id),
+    message: "Login successful",
+  });
+};
+
+// Check if the user is authenticated
+export const checkAuth = (req, res) => {
+  res.json({ success: true, user: req.user });
+};
+
+// Update profile details (name, bio, picture)
+export const updateProfile = async (req, res) => {
+  const { profilePic, bio, fullName } = req.body;
+  const update = {};
+
+  if (fullName !== undefined) {
+    if (!fullName.trim()) {
+      return res.status(400).json({ success: false, message: "Name can't be empty" });
     }
-}
+    update.fullName = fullName;
+  }
+  if (bio !== undefined) update.bio = bio;
 
-// controller to check if user is authenticated
-export  const checkAuth = (req , res)=>{
-    res.json({success:true , user: req.user});
-}
-
-// controller to update user profile details
-export const updateProfile = async (req, res)=>{
-
-    try {
-        const {profilePic , bio , fullName} = req.body;
-        const userId = req.user._id;
-        let updatedUser;
-
-        if(!profilePic){
-           updatedUser =  await User.findByIdAndUpdate(userId, {bio, fullName} , {new:true})
-        }else{
-            const upload = await cloudinary.uploader.upload(profilePic);
-
-            updatedUser = await User.findByIdAndUpdate(userId, {profilePic: upload.secure_url, bio, fullName}, {new:true})
-        }
-        res.json({success:true , user: updatedUser})
-
-    } catch (error) {
-        console.log(error.message);
-        res.json({success:false , message:error.message})
+  if (profilePic) {
+    if (!isDataUrlImage(profilePic)) {
+      return res.status(400).json({ success: false, message: "Unsupported image format" });
     }
+    update.profilePic = await uploadImage(profilePic, "avatars");
+  }
 
-}
+  const updatedUser = await User.findByIdAndUpdate(req.user._id, update, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.json({ success: true, user: updatedUser, message: "Profile updated successfully" });
+};
