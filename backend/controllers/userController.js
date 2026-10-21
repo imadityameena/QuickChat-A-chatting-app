@@ -3,8 +3,12 @@ import User from "../models/user.model.js";
 import { generateToken, isDataUrlImage } from "../lib/utils.js";
 import { uploadImage } from "../lib/cloudinary.js";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 6;
+import {
+  MAX_NAME_LENGTH,
+  normalizeEmail,
+  validateEmail,
+  validatePassword,
+} from "../lib/validation.js";
 
 // Errors thrown in these async handlers are caught by Express 5 and
 // passed to the error handler in server.js.
@@ -13,30 +17,37 @@ const MIN_PASSWORD_LENGTH = 6;
 export const signup = async (req, res) => {
   const { fullName, email, password, bio } = req.body;
 
-  if (!fullName?.trim() || !email?.trim() || !password) {
+  const name = String(fullName ?? "").trim();
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!name || !normalizedEmail || !password) {
     return res.status(400).json({ success: false, message: "Missing details" });
   }
-  if (!EMAIL_REGEX.test(email.trim())) {
-    return res.status(400).json({ success: false, message: "Please enter a valid email" });
-  }
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (name.length < 2 || name.length > MAX_NAME_LENGTH) {
     return res.status(400).json({
       success: false,
-      message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+      message: `Name must be 2–${MAX_NAME_LENGTH} characters`,
     });
   }
+  const emailError = await validateEmail(normalizedEmail);
+  if (emailError) {
+    return res.status(400).json({ success: false, message: emailError });
+  }
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return res.status(400).json({ success: false, message: passwordError });
+  }
 
-  const normalizedEmail = email.trim().toLowerCase();
   if (await User.exists({ email: normalizedEmail })) {
-    return res.status(409).json({ success: false, message: "Account already exists" });
+    return res.status(409).json({ success: false, message: "An account with this email already exists" });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = await User.create({
-    fullName,
+    fullName: name,
     email: normalizedEmail,
     password: hashedPassword,
-    bio: bio || "",
+    bio: String(bio ?? "").trim().slice(0, 200),
   });
 
   res.status(201).json({
@@ -45,6 +56,18 @@ export const signup = async (req, res) => {
     token: generateToken(newUser._id),
     message: "Account created successfully",
   });
+};
+
+// Check an email before the signup form moves on, so people learn early
+// that it's mistyped or already registered.
+export const checkEmail = async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  const error = await validateEmail(email);
+  if (error) return res.json({ success: false, message: error });
+  if (await User.exists({ email })) {
+    return res.json({ success: false, message: "An account with this email already exists" });
+  }
+  res.json({ success: true });
 };
 
 // Log in an existing user
