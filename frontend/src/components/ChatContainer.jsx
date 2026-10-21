@@ -88,9 +88,9 @@ const ChatContainer = () => {
   const isOnline = onlineUsers.includes(selectedUser._id);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden backdrop-blur-lg">
+    <div className="h-full min-h-0 flex flex-col overflow-hidden backdrop-blur-lg">
       {/* Header */}
-      <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500 shrink-0">
+      <div className="flex items-center gap-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] mx-4 border-b border-stone-500 shrink-0">
         <button
           type="button"
           aria-label="Back"
@@ -113,7 +113,7 @@ const ChatContainer = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 flex flex-col overflow-y-auto p-3 pb-4">
+      <div className="flex-1 flex flex-col overflow-y-auto p-3 pb-4 md:px-6">
         {messagesLoading && messages.length === 0 && (
           <div className="m-auto w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
         )}
@@ -146,14 +146,14 @@ const ChatContainer = () => {
                   />
                 )}
 
-                <div className={`flex flex-col max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
+                <div className={`flex flex-col max-w-[80%] md:max-w-[70%] ${isMine ? "items-end" : "items-start"}`}>
                   {msg.image && (
                     <a href={msg.image} target="_blank" rel="noreferrer">
                       <img
                         src={msg.image}
                         alt="Shared"
                         loading="lazy"
-                        className="max-w-[230px] max-h-72 object-cover border border-gray-700 rounded-lg"
+                        className="max-w-[min(230px,60vw)] max-h-72 object-cover border border-gray-700 rounded-lg"
                       />
                     </a>
                   )}
@@ -187,7 +187,7 @@ const ChatContainer = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="flex items-center gap-3 p-3 shrink-0">
+      <form onSubmit={handleSend} className="flex items-center gap-3 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6 shrink-0">
         <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
           <input
             ref={inputRef}
@@ -199,7 +199,7 @@ const ChatContainer = () => {
               setText(e.target.value);
               notifyTyping();
             }}
-            className="flex-1 bg-transparent text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
+            className="flex-1 min-w-0 bg-transparent text-base sm:text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
           />
           <input
             onChange={handleSendImage}

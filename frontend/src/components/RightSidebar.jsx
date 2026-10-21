@@ -16,7 +16,7 @@ const RightSidebar = () => {
   if (!selectedUser) return null;
 
   return (
-    <div className="bg-[#8185B2]/10 text-white w-full h-full flex flex-col overflow-hidden max-md:hidden">
+    <div className="bg-[#8185B2]/10 text-white w-full h-full flex flex-col overflow-hidden border-l border-white/10 max-xl:hidden">
       <div className="pt-12 flex flex-col items-center gap-2 text-xs font-light px-6 text-center">
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
@@ -52,7 +52,7 @@ const RightSidebar = () => {
       <button
         type="button"
         onClick={logout}
-        className="mx-auto my-5 shrink-0 bg-gradient-to-r from-purple-400 to-violet-600 text-white text-sm font-light py-2 px-20 rounded-full cursor-pointer"
+        className="mx-auto my-5 shrink-0 bg-gradient-to-r from-purple-400 to-violet-600 text-white text-sm font-light py-2 px-16 rounded-full cursor-pointer"
       >
         Logout
       </button>

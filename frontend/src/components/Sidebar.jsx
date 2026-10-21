@@ -39,7 +39,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-auto text-white ${
+      className={`bg-[#8185B2]/10 h-full min-h-0 p-4 sm:p-5 pt-[max(1rem,env(safe-area-inset-top))] md:border-r border-white/10 overflow-y-auto text-white ${
         selectedUser ? "max-md:hidden" : ""
       }`}
     >

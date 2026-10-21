@@ -8,12 +8,14 @@ const HomePage = () => {
   const { selectedUser } = useContext(ChatContext);
 
   return (
-    <div className="w-full h-dvh sm:px-[10%] sm:py-[4%] xl:px-[15%]">
+    // Fills the whole browser window. Phones show one panel at a time,
+    // tablets show list + chat, large screens add the profile panel.
+    <div className="w-full h-dvh overflow-hidden">
       <div
-        className={`backdrop-blur-xl border-2 border-gray-600 sm:rounded-2xl overflow-hidden h-full grid grid-cols-1 relative ${
+        className={`backdrop-blur-xl h-full grid grid-cols-1 relative ${
           selectedUser
-            ? "md:grid-cols-[1fr_1.5fr_1fr] xl:grid-cols-[1fr_2fr_1fr]"
-            : "md:grid-cols-2"
+            ? "md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr] xl:grid-cols-[360px_1fr_320px]"
+            : "md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]"
         }`}
       >
         <Sidebar />
