@@ -5,17 +5,14 @@ import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatSidebarTime } from "../lib/utils";
-import DiscoverPanel from "./DiscoverPanel";
-import RequestsPanel from "./RequestsPanel";
-
-const TABS = ["Chats", "Discover", "Requests"];
+import ViewTabs from "./ViewTabs";
 
 const Sidebar = () => {
-  const { users, selectedUser, selectUser, unseenMessages, typingUsers } = useContext(ChatContext);
+  const { users, selectedUser, selectUser, unseenMessages, typingUsers, view, setView } =
+    useContext(ChatContext);
   const { logout, onlineUsers, authUser } = useContext(AuthContext);
-  const { incoming } = useContext(FriendContext);
+  const { openProfile } = useContext(FriendContext);
 
-  const [tab, setTab] = useState("Chats");
   const [search, setSearch] = useState("");
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification === "undefined" ? "unsupported" : Notification.permission
@@ -43,14 +40,6 @@ const Sidebar = () => {
       )
     : users;
 
-  const totalUnseen = Object.values(unseenMessages).reduce((sum, n) => sum + n, 0);
-
-  // Jump from Discover/Requests straight into a chat with a new friend
-  const openChat = (user) => {
-    setTab("Chats");
-    selectUser(user);
-  };
-
   const enableNotifications = async () => {
     setMenuOpen(false);
     const result = await Notification.requestPermission();
@@ -68,7 +57,8 @@ const Sidebar = () => {
   return (
     <div
       className={`bg-[#8185B2]/10 h-full min-h-0 flex flex-col p-4 sm:p-5 pb-0 sm:pb-0 pt-[max(1rem,env(safe-area-inset-top))] md:border-r border-white/10 text-white ${
-        selectedUser ? "max-md:hidden" : ""
+        // phones show one screen at a time: hide the list while a chat or another page is open
+        selectedUser || view !== "chats" ? "max-md:hidden" : ""
       }`}
     >
       <div className="pb-4 shrink-0">
@@ -85,6 +75,16 @@ const Sidebar = () => {
             </button>
             {menuOpen && (
               <div className="absolute top-full right-0 z-20 w-36 p-4 rounded-md bg-[#282142] border border-gray-600 text-gray-100 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openProfile(authUser._id);
+                  }}
+                  className="block w-full text-left cursor-pointer text-sm hover:text-violet-300 mb-2"
+                >
+                  My profile
+                </button>
                 <button
                   type="button"
                   onClick={() => navigate("/profile")}
@@ -117,40 +117,11 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div role="tablist" className="grid grid-cols-3 gap-1 p-1 mt-4 rounded-full bg-[#282142]">
-          {TABS.map((name) => {
-            const badge = name === "Requests" ? incoming.length : name === "Chats" ? totalUnseen : 0;
-            return (
-              <button
-                key={name}
-                type="button"
-                role="tab"
-                aria-selected={tab === name}
-                onClick={() => setTab(name)}
-                className={`relative text-xs py-2 rounded-full cursor-pointer transition-colors ${
-                  tab === name ? "bg-violet-600 text-white" : "text-gray-300 hover:text-white"
-                }`}
-              >
-                {name}
-                {badge > 0 && (
-                  <span className="absolute -top-1 -right-0.5 text-[10px] min-w-4 h-4 px-1 flex justify-center items-center rounded-full bg-red-500 text-white">
-                    {badge > 99 ? "99+" : badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <ViewTabs className="mt-4" />
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
-        {tab === "Discover" && <DiscoverPanel onOpenChat={openChat} />}
-        {tab === "Requests" && (
-          <RequestsPanel onOpenChat={openChat} onDiscover={() => setTab("Discover")} />
-        )}
-        {tab === "Chats" && (
-          <>
+        <>
             {users.length > 0 && (
               <div className="bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mb-3">
                 <img src={assets.search_icon} alt="" className="w-3" />
@@ -171,7 +142,7 @@ const Sidebar = () => {
                   <p>Add friends to start chatting. They'll show up here once they accept.</p>
                   <button
                     type="button"
-                    onClick={() => setTab("Discover")}
+                    onClick={() => setView("discover")}
                     className="mt-4 px-4 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white cursor-pointer"
                   >
                     Find people
@@ -190,7 +161,7 @@ const Sidebar = () => {
                     key={user._id}
                     onClick={() => selectUser(user)}
                     className={`flex items-center gap-3 p-2 pl-3 rounded-lg cursor-pointer text-left hover:bg-[#282142]/40 max-sm:text-sm ${
-                      selectedUser?._id === user._id ? "bg-[#282142]/60" : ""
+                      view === "chats" && selectedUser?._id === user._id ? "bg-[#282142]/60" : ""
                     }`}
                   >
                     <div className="relative shrink-0">
@@ -232,8 +203,7 @@ const Sidebar = () => {
                 );
               })}
             </div>
-          </>
-        )}
+        </>
       </div>
     </div>
   );

@@ -184,3 +184,51 @@ export const removeFriend = async (req, res) => {
   emitToUser(userId, "friendRemoved", { userId: String(me) });
   res.json({ success: true, message: "Friend removed" });
 };
+
+// Public profile of any user, with friend count, mutual friends and how the
+// two of you are connected: "self", "friends", "sent", "received" or "none"
+export const getProfile = async (req, res) => {
+  const me = req.user;
+  const { userId } = req.params;
+  if (!mongoose.isValidObjectId(userId)) return bad(res, 400, "Invalid user id");
+
+  const user = await User.findById(userId).select(`${PUBLIC_USER_FIELDS} friends createdAt`).lean();
+  if (!user) return bad(res, 404, "User not found");
+
+  const myFriends = new Set(me.friends.map(String));
+  const mutualIds = user.friends.filter((id) => myFriends.has(String(id)));
+
+  let relationship = "none";
+  let requestId = null;
+  if (me._id.equals(user._id)) relationship = "self";
+  else if (myFriends.has(String(user._id))) relationship = "friends";
+  else {
+    const request = await FriendRequest.findOne({
+      $or: [
+        { from: me._id, to: user._id },
+        { from: user._id, to: me._id },
+      ],
+    }).lean();
+    if (request) {
+      relationship = request.from.equals(me._id) ? "sent" : "received";
+      requestId = request._id;
+    }
+  }
+
+  const mutualPreview = relationship === "self" ? [] : await User.find({ _id: { $in: mutualIds.slice(0, 5) } })
+    .select("fullName username profilePic")
+    .lean();
+
+  const { friends, ...profile } = user;
+  res.json({
+    success: true,
+    profile: {
+      ...profile,
+      friendCount: friends.length,
+      mutualCount: relationship === "self" ? 0 : mutualIds.length,
+      mutualFriends: mutualPreview,
+      relationship,
+      requestId,
+    },
+  });
+};

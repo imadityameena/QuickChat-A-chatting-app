@@ -68,3 +68,32 @@ export function formatLastSeen(date) {
   }
   return `Last seen ${day}`;
 }
+
+// "just now", "5m ago", "3h ago", "2d ago", or the date for older times
+export function timeAgo(date) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatDayLabel(date);
+}
+
+// How long someone has been a member: "Joined today", "3 days", "4 months", "2 years"
+export function memberDuration(date) {
+  const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
+  if (days < 1) return "Joined today";
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"}`;
+  const months = Math.floor(days / 30.44);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"}`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years === 1 ? "" : "s"}`;
+}
+
+// "March 2026"
+export function formatMonthYear(date) {
+  return new Date(date).toLocaleDateString([], { month: "long", year: "numeric" });
+}

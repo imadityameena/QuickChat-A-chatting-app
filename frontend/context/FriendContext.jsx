@@ -16,6 +16,8 @@ export const FriendProvider = ({ children }) => {
   const [discoverUsers, setDiscoverUsers] = useState([]);
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [busy, setBusy] = useState({}); // userId -> true while a request is in flight
+  const [profileUserId, setProfileUserId] = useState(null); // whose profile popup is open
+  const [friendsVersion, setFriendsVersion] = useState(0); // bumps on any friend change, so open profiles refresh
 
   const discoverQuery = useRef("");
 
@@ -61,7 +63,9 @@ export const FriendProvider = ({ children }) => {
   const withBusy = async (userId, action) => {
     setBusy((b) => ({ ...b, [userId]: true }));
     try {
-      return await action();
+      const result = await action();
+      setFriendsVersion((v) => v + 1);
+      return result;
     } catch (error) {
       toast.error(getErrorMessage(error));
       return null;
@@ -131,6 +135,7 @@ export const FriendProvider = ({ children }) => {
       setIncoming([]);
       setOutgoing([]);
       setDiscoverUsers([]);
+      setProfileUserId(null);
     }
   }, [authUser?._id, loadRequests]);
 
@@ -139,12 +144,14 @@ export const FriendProvider = ({ children }) => {
     if (!socket) return;
 
     const onRequest = (request) => {
+      setFriendsVersion((v) => v + 1);
       setIncoming((prev) => (prev.some((r) => r._id === request._id) ? prev : [request, ...prev]));
       setDiscoverStatus(request.user._id, "received", request._id);
       toast(`${request.user.fullName} sent you a friend request`, { icon: "👋" });
     };
 
     const onRemoved = ({ requestId }) => {
+      setFriendsVersion((v) => v + 1);
       const matches = (r) => r._id === requestId;
       setIncoming((prev) => prev.filter((r) => !matches(r)));
       setOutgoing((prev) => prev.filter((r) => !matches(r)));
@@ -154,6 +161,7 @@ export const FriendProvider = ({ children }) => {
     };
 
     const onAccepted = ({ requestId, user }) => {
+      setFriendsVersion((v) => v + 1);
       setOutgoing((prev) => prev.filter((r) => r._id !== requestId));
       setIncoming((prev) => prev.filter((r) => r.user._id !== user._id));
       setDiscoverStatus(user._id, "friends");
@@ -161,17 +169,30 @@ export const FriendProvider = ({ children }) => {
       toast.success(`${user.fullName} accepted your friend request`);
     };
 
+    const onFriendRemoved = () => setFriendsVersion((v) => v + 1);
+
     socket.on("friendRequest", onRequest);
+    socket.on("friendRemoved", onFriendRemoved);
     socket.on("friendRequestRemoved", onRemoved);
     socket.on("friendRequestAccepted", onAccepted);
     return () => {
       socket.off("friendRequest", onRequest);
+      socket.off("friendRemoved", onFriendRemoved);
       socket.off("friendRequestRemoved", onRemoved);
       socket.off("friendRequestAccepted", onAccepted);
     };
   }, [socket, getUsers, setDiscoverStatus]);
 
+  const openProfile = useCallback((userOrId) => {
+    setProfileUserId(typeof userOrId === "string" ? userOrId : userOrId?._id ?? null);
+  }, []);
+  const closeProfile = useCallback(() => setProfileUserId(null), []);
+
   const value = {
+    profileUserId,
+    friendsVersion,
+    openProfile,
+    closeProfile,
     incoming,
     outgoing,
     discoverUsers,

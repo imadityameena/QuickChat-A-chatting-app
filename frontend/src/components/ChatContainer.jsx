@@ -11,6 +11,7 @@ import {
 } from "../lib/utils";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
+import { FriendContext } from "../../context/FriendContext";
 
 const ChatContainer = () => {
   const scrollEnd = useRef(null);
@@ -29,6 +30,7 @@ const ChatContainer = () => {
     notifyTyping,
   } = useContext(ChatContext);
 
+  const { openProfile } = useContext(FriendContext);
   const isTyping = selectedUser && typingUsers[selectedUser._id];
 
   // Auto scroll to the newest message
@@ -100,17 +102,24 @@ const ChatContainer = () => {
         >
           <img src={assets.arrow_icon} alt="" className="w-6" />
         </button>
-        <img
-          src={selectedUser.profilePic || assets.avatar_icon}
-          alt=""
-          className="w-9 aspect-square rounded-full object-cover"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-lg text-white truncate leading-6">{selectedUser.fullName}</p>
-          <p className={`text-xs ${isTyping ? "text-violet-300" : isOnline ? "text-green-400" : "text-gray-400"}`}>
-            {isTyping ? "typing…" : isOnline ? "Online" : formatLastSeen(selectedUser.lastSeen)}
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={() => openProfile(selectedUser)}
+          title="View profile"
+          className="flex-1 min-w-0 flex items-center gap-3 text-left cursor-pointer"
+        >
+          <img
+            src={selectedUser.profilePic || assets.avatar_icon}
+            alt=""
+            className="w-9 aspect-square rounded-full object-cover shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-lg text-white truncate leading-6">{selectedUser.fullName}</p>
+            <p className={`text-xs ${isTyping ? "text-violet-300" : isOnline ? "text-green-400" : "text-gray-400"}`}>
+              {isTyping ? "typing…" : isOnline ? "Online" : formatLastSeen(selectedUser.lastSeen)}
+            </p>
+          </div>
+        </button>
       </div>
 
       {/* Messages */}

@@ -41,6 +41,8 @@ export const ChatProvider = ({ children }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
+  // Which page the home screen shows: "chats", "discover" or "requests"
+  const [view, setViewState] = useState("chats");
 
   const { socket, axios, authUser, onlineUsers } = useContext(AuthContext);
 
@@ -99,7 +101,19 @@ export const ChatProvider = ({ children }) => {
   const selectUser = useCallback((user) => {
     setSelectedUser(user);
     setMessages([]);
-    if (user) setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
+    if (user) {
+      setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
+      setViewState("chats");
+    }
+  }, []);
+
+  // Switching to Discover or Requests closes the open conversation
+  const setView = useCallback((next) => {
+    setViewState(next);
+    if (next !== "chats") {
+      setSelectedUser(null);
+      setMessages([]);
+    }
   }, []);
 
   // Send a message to the selected user. Returns true on success.
@@ -153,6 +167,7 @@ export const ChatProvider = ({ children }) => {
       setSelectedUser(null);
       setUnseenMessages({});
       setTypingUsers({});
+      setViewState("chats");
     }
   }, [authUser?._id, getUsers]);
 
@@ -269,6 +284,8 @@ export const ChatProvider = ({ children }) => {
     setUnseenMessages,
     typingUsers,
     notifyTyping,
+    view,
+    setView,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

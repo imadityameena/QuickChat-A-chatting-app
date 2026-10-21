@@ -8,7 +8,7 @@ import { formatLastSeen } from "../lib/utils";
 const RightSidebar = () => {
   const { selectedUser, messages } = useContext(ChatContext);
   const { logout, onlineUsers } = useContext(AuthContext);
-  const { removeFriend, busy } = useContext(FriendContext);
+  const { removeFriend, busy, openProfile } = useContext(FriendContext);
 
   // All images shared in this conversation, newest first
   const msgImages = useMemo(
@@ -37,6 +37,13 @@ const RightSidebar = () => {
           {onlineUsers.includes(selectedUser._id) ? "Online" : formatLastSeen(selectedUser.lastSeen)}
         </p>
         {selectedUser.bio && <p className="text-gray-300 break-words">{selectedUser.bio}</p>}
+        <button
+          type="button"
+          onClick={() => openProfile(selectedUser)}
+          className="mt-2 px-4 py-1.5 rounded-full border border-white/20 hover:border-violet-400 text-xs cursor-pointer"
+        >
+          View full profile
+        </button>
       </div>
 
       <hr className="border-[#ffffff50] my-4" />

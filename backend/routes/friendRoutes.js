@@ -5,6 +5,7 @@ import {
   cancelRequest,
   declineRequest,
   discoverUsers,
+  getProfile,
   getRequests,
   removeFriend,
   sendRequest,
@@ -16,6 +17,7 @@ friendRouter.use(protectRoute);
 
 friendRouter.get("/discover", discoverUsers);
 friendRouter.get("/requests", getRequests);
+friendRouter.get("/profile/:userId", getProfile);
 friendRouter.post("/request/:userId", sendRequest);
 friendRouter.post("/requests/:requestId/accept", acceptRequest);
 friendRouter.post("/requests/:requestId/decline", declineRequest);
