@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from "react";
-import assets from "../assets/assets";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen } from "../lib/utils";
 import { button } from "../lib/ui";
+import { avatarSrc, imageSrc } from "../lib/images";
 
 // Details about the person in the open chat (large screens only)
 const RightSidebar = () => {
@@ -26,7 +26,7 @@ const RightSidebar = () => {
       <div className="pt-10 pb-6 flex flex-col items-center gap-1 px-6 text-center">
         <div className="relative mb-2">
           <img
-            src={selectedUser.profilePic || assets.avatar_icon}
+            src={avatarSrc(selectedUser, 96)}
             alt=""
             className="w-24 h-24 rounded-full object-cover bg-surface-2"
           />
@@ -60,7 +60,7 @@ const RightSidebar = () => {
             {msgImages.map((url) => (
               <a key={url} href={url} target="_blank" rel="noreferrer" className="rounded-lg overflow-hidden">
                 <img
-                  src={url}
+                  src={imageSrc(url, 240)}
                   alt=""
                   loading="lazy"
                   className="w-full aspect-square object-cover hover:opacity-90 transition-opacity"

@@ -13,6 +13,7 @@ import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 import { FriendContext } from "../../context/FriendContext";
 import { ArrowLeftIcon, ImageIcon, SendIcon } from "./icons";
+import { avatarSrc, imageSrc } from "../lib/images";
 
 const ChatContainer = () => {
   const scrollEnd = useRef(null);
@@ -111,7 +112,7 @@ const ChatContainer = () => {
         >
           <div className="relative shrink-0">
             <img
-              src={selectedUser.profilePic || assets.avatar_icon}
+              src={avatarSrc(selectedUser, 40)}
               alt=""
               className="w-10 h-10 rounded-full object-cover bg-surface-2"
             />
@@ -137,7 +138,7 @@ const ChatContainer = () => {
         {!messagesLoading && messages.length === 0 && (
           <div className="m-auto text-center">
             <img
-              src={selectedUser.profilePic || assets.avatar_icon}
+              src={avatarSrc(selectedUser, 80)}
               alt=""
               className="w-20 h-20 mx-auto rounded-full object-cover mb-3 bg-surface-2"
             />
@@ -165,7 +166,7 @@ const ChatContainer = () => {
                 {!isMine &&
                   (lastInGroup ? (
                     <img
-                      src={selectedUser.profilePic || assets.avatar_icon}
+                      src={avatarSrc(selectedUser, 28)}
                       alt=""
                       className="w-7 h-7 rounded-full object-cover shrink-0 bg-surface-2"
                     />
@@ -177,7 +178,7 @@ const ChatContainer = () => {
                   {msg.image && (
                     <a href={msg.image} target="_blank" rel="noreferrer" className="block">
                       <img
-                        src={msg.image}
+                        src={imageSrc(msg.image, 560)}
                         alt="Shared"
                         loading="lazy"
                         className="max-w-[min(260px,65vw)] max-h-80 object-cover border border-line rounded-2xl"

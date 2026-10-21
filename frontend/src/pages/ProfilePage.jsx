@@ -8,6 +8,7 @@ import { formatName, normalizeUsername } from "../lib/validation";
 import UsernameInput from "../components/UsernameInput";
 import { ArrowLeftIcon } from "../components/icons";
 import { formButton, input } from "../lib/ui";
+import { avatarSrc } from "../lib/images";
 
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
@@ -63,7 +64,7 @@ const ProfilePage = () => {
     }
   };
 
-  const avatar = previewUrl || authUser.profilePic || assets.avatar_icon;
+  const avatar = previewUrl || avatarSrc(authUser, 48);
 
   return (
     <div className="min-h-dvh flex items-center justify-center p-4 py-8">
@@ -138,7 +139,7 @@ const ProfilePage = () => {
 
         <img
           className="w-40 max-w-40 aspect-square rounded-full object-cover mx-10 max-sm:mt-8 bg-surface-2 ring-4 ring-accent-soft"
-          src={previewUrl || authUser.profilePic || assets.logo_icon}
+          src={previewUrl || (authUser.profilePic ? avatarSrc(authUser, 160) : assets.logo_icon)}
           alt=""
         />
       </div>

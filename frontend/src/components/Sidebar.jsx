@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { FriendContext } from "../../context/FriendContext";
@@ -21,6 +20,7 @@ import {
   SunIcon,
   UserIcon,
 } from "./icons";
+import { avatarSrc } from "../lib/images";
 
 const THEME_OPTIONS = [
   { id: "light", label: "Light", Icon: SunIcon },
@@ -278,7 +278,7 @@ const Sidebar = () => {
               >
                 <div className="relative shrink-0">
                   <img
-                    src={user.profilePic || assets.avatar_icon}
+                    src={avatarSrc(user, 44)}
                     alt=""
                     className="w-11 h-11 rounded-full object-cover bg-surface-2"
                   />

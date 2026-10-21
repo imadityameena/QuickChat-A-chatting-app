@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen, formatMonthYear, getErrorMessage, memberDuration } from "../lib/utils";
 import { cardButton } from "../lib/ui";
 import { ChatIcon, CheckIcon, ClockIcon, UserPlusIcon, XIcon } from "./icons";
+import { avatarSrc } from "../lib/images";
 
 const Stat = ({ value, label }) => (
   <div className="flex-1 text-center px-2">
@@ -173,7 +173,7 @@ const ProfileModal = () => {
           <div className={`flex flex-col items-center text-center px-6 pb-6 -mt-14 ${loading ? "opacity-80" : ""}`}>
             <div className="relative">
               <img
-                src={profile.profilePic || assets.avatar_icon}
+                src={avatarSrc(profile, 112)}
                 alt=""
                 className="w-28 h-28 rounded-full object-cover ring-4 ring-surface bg-surface-2"
               />
@@ -205,7 +205,7 @@ const ProfileModal = () => {
                   {profile.mutualFriends.map((f) => (
                     <img
                       key={f._id}
-                      src={f.profilePic || assets.avatar_icon}
+                      src={avatarSrc(f, 24)}
                       alt={f.fullName}
                       title={f.fullName}
                       className="w-6 h-6 rounded-full object-cover ring-2 ring-surface"

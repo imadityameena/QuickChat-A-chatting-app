@@ -1,18 +1,30 @@
 {
   "version": 2,
+  "regions": [
+    "bom1"
+  ],
   "builds": [
     {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**"]
+        "includeFiles": [
+          "dist/**"
+        ]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "methods": ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+      ],
       "dest": "server.js",
       "headers": {
         "Access-Control-Allow-Origin": "https://chat-app-one-wheat-68.vercel.app",

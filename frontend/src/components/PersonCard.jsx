@@ -1,5 +1,5 @@
 import React from "react";
-import assets from "../assets/assets";
+import { avatarSrc } from "../lib/images";
 
 // Profile card used on the Discover and Requests pages.
 // `badge` is a small label on the cover, `meta` a line under the username,
@@ -22,7 +22,7 @@ const PersonCard = ({ user, online, badge, meta, onOpen, children }) => (
         className="relative rounded-full cursor-pointer"
       >
         <img
-          src={user.profilePic || assets.avatar_icon}
+          src={avatarSrc(user, 72)}
           alt=""
           className="w-[72px] h-[72px] rounded-full object-cover ring-4 ring-surface bg-surface-2"
         />
