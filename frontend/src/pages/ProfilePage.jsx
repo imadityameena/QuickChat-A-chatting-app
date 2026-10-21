@@ -6,8 +6,8 @@ import { AuthContext } from "../../context/AuthContext";
 import { readFileAsDataURL, validateImageFile } from "../lib/utils";
 import { formatName, normalizeUsername } from "../lib/validation";
 import UsernameInput from "../components/UsernameInput";
-import { ArrowLeftIcon } from "../components/icons";
-import { formButton, input } from "../lib/ui";
+import { ArrowLeftIcon, CameraIcon, TrashIcon } from "../components/icons";
+import { button, formButton, input } from "../lib/ui";
 import { avatarSrc } from "../lib/images";
 
 const ProfilePage = () => {
@@ -16,6 +16,7 @@ const ProfilePage = () => {
 
   const [selectedImg, setSelectedImg] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
   const [name, setName] = useState(authUser.fullName);
   const [bio, setBio] = useState(authUser.bio || "");
   const [username, setUsername] = useState(authUser.username || "");
@@ -32,14 +33,18 @@ const ProfilePage = () => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    e.target.value = ""; // allow picking the same file again
     if (!file) return;
     const error = validateImageFile(file);
-    if (error) {
-      toast.error(error);
-      e.target.value = "";
-      return;
-    }
+    if (error) return toast.error(error);
     setSelectedImg(file);
+    setRemovePhoto(false);
+  };
+
+  // Drop a newly picked photo, or mark the saved one for removal
+  const handleRemovePhoto = () => {
+    if (selectedImg) setSelectedImg(null);
+    else setRemovePhoto(true);
   };
 
   const handleSubmit = async (e) => {
@@ -56,6 +61,7 @@ const ProfilePage = () => {
     try {
       const body = { fullName: formatName(name), bio: bio.trim(), username: normalizeUsername(username) };
       if (selectedImg) body.profilePic = await readFileAsDataURL(selectedImg);
+      else if (removePhoto) body.removeProfilePic = true;
       if (await updateProfile(body)) navigate("/");
     } catch (err) {
       toast.error(err.message);
@@ -64,7 +70,9 @@ const ProfilePage = () => {
     }
   };
 
-  const avatar = previewUrl || avatarSrc(authUser, 48);
+  const hasSavedPhoto = !!authUser.profilePic && !removePhoto;
+  const hasPhoto = !!selectedImg || hasSavedPhoto;
+  const bigAvatar = previewUrl || (hasSavedPhoto ? avatarSrc(authUser, 160) : assets.avatar_icon);
 
   return (
     <div className="min-h-dvh flex items-center justify-center p-4 py-8">
@@ -82,7 +90,8 @@ const ProfilePage = () => {
             Edit profile
           </h1>
 
-          <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer w-fit">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium">Profile photo</p>
             <input
               onChange={handleImageChange}
               type="file"
@@ -90,11 +99,31 @@ const ProfilePage = () => {
               accept="image/png, image/jpeg, image/webp"
               hidden
             />
-            <img src={avatar} alt="" className="w-12 h-12 rounded-full object-cover bg-surface-2" />
-            <span className="text-sm font-medium text-accent-text hover:underline">
-              {authUser.profilePic || selectedImg ? "Change profile image" : "Upload profile image"}
-            </span>
-          </label>
+            <div className="flex flex-wrap gap-2">
+              <label htmlFor="avatar" className={button.secondary}>
+                <CameraIcon className="w-4 h-4" />
+                {hasPhoto ? "Change photo" : "Upload photo"}
+              </label>
+              {hasPhoto && (
+                <button type="button" onClick={handleRemovePhoto} className={button.danger}>
+                  <TrashIcon className="w-4 h-4" />
+                  Remove
+                </button>
+              )}
+              {removePhoto && !selectedImg && (
+                <button type="button" onClick={() => setRemovePhoto(false)} className={button.secondary}>
+                  Undo
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-subtle">
+              {selectedImg
+                ? "New photo selected. Click Save to apply it."
+                : removePhoto
+                ? "Your photo will be removed when you click Save."
+                : "JPG, PNG or WebP, up to 5MB."}
+            </p>
+          </div>
 
           <input
             onChange={(e) => setName(e.target.value)}
@@ -137,11 +166,25 @@ const ProfilePage = () => {
           </button>
         </form>
 
-        <img
-          className="w-40 max-w-40 aspect-square rounded-full object-cover mx-10 max-sm:mt-8 bg-surface-2 ring-4 ring-accent-soft"
-          src={previewUrl || (authUser.profilePic ? avatarSrc(authUser, 160) : assets.logo_icon)}
-          alt=""
-        />
+        {/* Big avatar: click it to pick a new photo */}
+        <label
+          htmlFor="avatar"
+          title="Change profile photo"
+          className="relative group shrink-0 cursor-pointer mx-10 max-sm:mt-8 rounded-full"
+        >
+          <img
+            className="w-40 h-40 rounded-full object-cover bg-surface-2 ring-4 ring-accent-soft"
+            src={bigAvatar}
+            alt="Profile photo"
+          />
+          <span className="absolute inset-0 rounded-full bg-black/45 text-white flex flex-col items-center justify-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            <CameraIcon className="w-6 h-6" />
+            Change
+          </span>
+          <span className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-accent text-accent-fg border-4 border-surface flex items-center justify-center">
+            <CameraIcon className="w-4 h-4" />
+          </span>
+        </label>
       </div>
     </div>
   );

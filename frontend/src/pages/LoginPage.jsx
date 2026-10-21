@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
@@ -433,7 +434,7 @@ const LoginPage = () => {
 
             {isSignup && (
               <div className="flex flex-col gap-1">
-                <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
+                <label className="flex items-start gap-2 text-sm text-muted cursor-pointer">
                   <input
                     type="checkbox"
                     checked={agreed}
@@ -441,9 +442,19 @@ const LoginPage = () => {
                       setAgreed(e.target.checked);
                       touch("agreed");
                     }}
-                    className="accent-[var(--accent)] w-4 h-4"
+                    className="accent-[var(--accent)] w-4 h-4 mt-0.5 shrink-0"
                   />
-                  I agree to the terms of use & privacy policy.
+                  <span>
+                    I agree to the{" "}
+                    <Link to="/terms" target="_blank" className="text-accent-text hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/privacy" target="_blank" className="text-accent-text hover:underline">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
                 </label>
                 {showError("agreed") && <p className="text-xs text-danger">{errors.agreed}</p>}
               </div>
@@ -471,6 +482,11 @@ const LoginPage = () => {
             </p>
           </>
         )}
+        <p className="text-xs text-subtle text-center">
+          <Link to="/terms" className="hover:text-fg hover:underline">Terms</Link>
+          {" · "}
+          <Link to="/privacy" className="hover:text-fg hover:underline">Privacy</Link>
+        </p>
       </form>
     </div>
   );

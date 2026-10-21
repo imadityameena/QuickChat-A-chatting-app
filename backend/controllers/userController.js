@@ -205,6 +205,8 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: "Unsupported image format" });
     }
     update.profilePic = await uploadImage(profilePic, "avatars");
+  } else if (req.body.removeProfilePic === true) {
+    update.profilePic = ""; // back to the default avatar
   }
 
   let updatedUser;

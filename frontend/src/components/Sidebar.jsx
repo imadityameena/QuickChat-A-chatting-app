@@ -9,6 +9,8 @@ import { button } from "../lib/ui";
 import Logo from "./Logo";
 import ViewTabs from "./ViewTabs";
 import {
+  ShieldIcon,
+  FileTextIcon,
   BellIcon,
   CompassIcon,
   LogOutIcon,
@@ -174,6 +176,14 @@ const Sidebar = () => {
                     );
                   })}
                 </div>
+
+                <div className="my-1 border-t border-line" />
+                <MenuItem onClick={() => navigate("/privacy")}>
+                  <ShieldIcon className="w-4 h-4 text-muted" /> Privacy Policy
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/terms")}>
+                  <FileTextIcon className="w-4 h-4 text-muted" /> Terms of Service
+                </MenuItem>
 
                 <div className="my-1 border-t border-line" />
                 <MenuItem danger onClick={logout}>
