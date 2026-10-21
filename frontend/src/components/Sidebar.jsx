@@ -5,13 +5,48 @@ import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatSidebarTime } from "../lib/utils";
+import { useTheme } from "../lib/theme";
+import { button } from "../lib/ui";
+import Logo from "./Logo";
 import ViewTabs from "./ViewTabs";
+import {
+  BellIcon,
+  CompassIcon,
+  LogOutIcon,
+  MenuIcon,
+  MonitorIcon,
+  MoonIcon,
+  PencilIcon,
+  SearchIcon,
+  SunIcon,
+  UserIcon,
+} from "./icons";
+
+const THEME_OPTIONS = [
+  { id: "light", label: "Light", Icon: SunIcon },
+  { id: "dark", label: "Dark", Icon: MoonIcon },
+  { id: "system", label: "Auto", Icon: MonitorIcon },
+];
+
+const MenuItem = ({ onClick, children, danger }) => (
+  <button
+    type="button"
+    role="menuitem"
+    onClick={onClick}
+    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left cursor-pointer transition-colors ${
+      danger ? "text-danger hover:bg-danger-soft" : "text-fg hover:bg-surface-3"
+    }`}
+  >
+    {children}
+  </button>
+);
 
 const Sidebar = () => {
   const { users, selectedUser, selectUser, unseenMessages, typingUsers, view, setView } =
     useContext(ChatContext);
   const { logout, onlineUsers, authUser } = useContext(AuthContext);
   const { openProfile } = useContext(FriendContext);
+  const [themeMode, setThemeMode] = useTheme();
 
   const [search, setSearch] = useState("");
   const [notifPermission, setNotifPermission] = useState(() =>
@@ -21,14 +56,19 @@ const Sidebar = () => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  // Close the menu when clicking anywhere else
+  // Close the menu when clicking anywhere else or pressing Escape
   useEffect(() => {
     if (!menuOpen) return;
     const close = (e) => {
       if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
     };
+    const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [menuOpen]);
 
   const query = search.trim().toLowerCase();
@@ -47,165 +87,174 @@ const Sidebar = () => {
   };
 
   const previewText = (user) => {
-    if (typingUsers[user._id]) return <span className="text-violet-300">typing…</span>;
+    if (typingUsers[user._id]) return <span className="text-accent-text">typing…</span>;
     const last = user.lastMessage;
-    if (!last) return onlineUsers.includes(user._id) ? "Online" : "Offline";
+    if (!last) return onlineUsers.includes(user._id) ? "Online" : "Say hi 👋";
     const prefix = last.senderId === authUser._id ? "You: " : "";
     return prefix + (last.image && !last.text ? "📷 Photo" : last.text);
   };
 
   return (
-    <div
-      className={`bg-[#8185B2]/10 h-full min-h-0 flex flex-col p-4 sm:p-5 pb-0 sm:pb-0 pt-[max(1rem,env(safe-area-inset-top))] md:border-r border-white/10 text-white ${
+    <aside
+      className={`bg-surface h-full min-h-0 flex flex-col md:border-r border-line text-fg ${
         // phones show one screen at a time: hide the list while a chat or another page is open
         selectedUser || view !== "chats" ? "max-md:hidden" : ""
       }`}
     >
-      <div className="pb-4 shrink-0">
+      <div className="shrink-0 px-4 sm:px-5 pt-[max(1rem,env(safe-area-inset-top))] md:pt-5 pb-4">
         <div className="flex justify-between items-center">
-          <img src={assets.logo} alt="QuickChat" className="max-w-40" />
-          <div className="relative py-2" ref={menuRef}>
+          <Logo />
+          <div className="relative" ref={menuRef}>
             <button
               type="button"
               aria-label="Open menu"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
-              className="cursor-pointer p-1"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-muted hover:text-fg hover:bg-surface-3 cursor-pointer transition-colors"
             >
-              <img src={assets.menu_icon} alt="" className="max-h-5" />
+              <MenuIcon className="w-5 h-5" />
             </button>
             {menuOpen && (
-              <div className="absolute top-full right-0 z-20 w-36 p-4 rounded-md bg-[#282142] border border-gray-600 text-gray-100 shadow-lg">
-                <button
-                  type="button"
+              <div
+                role="menu"
+                className="absolute top-full right-0 mt-1 z-30 w-56 p-1.5 rounded-xl bg-surface border border-line shadow-xl shadow-black/20"
+              >
+                <MenuItem
                   onClick={() => {
                     setMenuOpen(false);
                     openProfile(authUser._id);
                   }}
-                  className="block w-full text-left cursor-pointer text-sm hover:text-violet-300 mb-2"
                 >
-                  My profile
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/profile")}
-                  className="block w-full text-left cursor-pointer text-sm hover:text-violet-300"
-                >
-                  Edit Profile
-                </button>
+                  <UserIcon className="w-4 h-4 text-muted" /> My profile
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/profile")}>
+                  <PencilIcon className="w-4 h-4 text-muted" /> Edit profile
+                </MenuItem>
                 {notifPermission === "default" && (
-                  <>
-                    <hr className="my-2 border-t border-gray-500" />
-                    <button
-                      type="button"
-                      onClick={enableNotifications}
-                      className="block w-full text-left cursor-pointer text-sm hover:text-violet-300"
-                    >
-                      Enable notifications
-                    </button>
-                  </>
+                  <MenuItem onClick={enableNotifications}>
+                    <BellIcon className="w-4 h-4 text-muted" /> Enable notifications
+                  </MenuItem>
                 )}
-                <hr className="my-2 border-t border-gray-500" />
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="block w-full text-left cursor-pointer text-sm hover:text-violet-300"
-                >
-                  Logout
-                </button>
+
+                <div className="px-3 pt-3 pb-1.5 text-xs text-subtle">Theme</div>
+                <div className="grid grid-cols-3 gap-1 px-1.5 pb-1.5">
+                  {THEME_OPTIONS.map((opt) => {
+                    const OptIcon = opt.Icon;
+                    const active = themeMode === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setThemeMode(opt.id)}
+                        className={`flex flex-col items-center gap-1 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                          active ? "bg-accent-soft text-accent-text font-medium" : "text-muted hover:bg-surface-3"
+                        }`}
+                      >
+                        <OptIcon className="w-4 h-4" />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="my-1 border-t border-line" />
+                <MenuItem danger onClick={logout}>
+                  <LogOutIcon className="w-4 h-4" /> Log out
+                </MenuItem>
               </div>
             )}
           </div>
         </div>
 
         <ViewTabs className="mt-4" />
+
+        {users.length > 0 && (
+          <label className="mt-3 flex items-center gap-2 bg-surface-2 border border-line rounded-full px-4 py-2.5 transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft">
+            <SearchIcon className="w-4 h-4 text-subtle shrink-0" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              type="search"
+              className="flex-1 min-w-0 bg-transparent outline-none text-fg text-base sm:text-sm placeholder:text-subtle"
+              placeholder="Search chats"
+            />
+          </label>
+        )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <>
-            {users.length > 0 && (
-              <div className="bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mb-3">
-                <img src={assets.search_icon} alt="" className="w-3" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  type="search"
-                  className="bg-transparent border-none outline-none text-white text-base sm:text-xs placeholder-[#c8c8c8] flex-1 min-w-0"
-                  placeholder="Search chats..."
-                />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1">
-              {users.length === 0 && (
-                <div className="text-center text-sm text-gray-400 mt-10 px-4">
-                  <p className="text-white text-base mb-1">No chats yet</p>
-                  <p>Add friends to start chatting. They'll show up here once they accept.</p>
-                  <button
-                    type="button"
-                    onClick={() => setView("discover")}
-                    className="mt-4 px-4 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white cursor-pointer"
-                  >
-                    Find people
-                  </button>
-                </div>
-              )}
-              {users.length > 0 && filteredUsers.length === 0 && (
-                <p className="text-center text-sm text-gray-400 mt-6">No chats match your search</p>
-              )}
-              {filteredUsers.map((user) => {
-                const unseen = unseenMessages[user._id] || 0;
-                const isOnline = onlineUsers.includes(user._id);
-                return (
-                  <button
-                    type="button"
-                    key={user._id}
-                    onClick={() => selectUser(user)}
-                    className={`flex items-center gap-3 p-2 pl-3 rounded-lg cursor-pointer text-left hover:bg-[#282142]/40 max-sm:text-sm ${
-                      view === "chats" && selectedUser?._id === user._id ? "bg-[#282142]/60" : ""
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      <img
-                        src={user.profilePic || assets.avatar_icon}
-                        alt=""
-                        className="w-[38px] aspect-square rounded-full object-cover"
-                      />
-                      {isOnline && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-[#1d1838]" />
-                      )}
-                    </div>
-
-                    <div className="flex flex-col leading-5 min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate">{user.fullName}</p>
-                        {user.lastMessage && (
-                          <span className="text-[10px] text-gray-400 shrink-0">
-                            {formatSidebarTime(user.lastMessage.createdAt)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={`text-xs truncate ${
-                            unseen > 0 ? "text-white font-medium" : "text-neutral-400"
-                          }`}
-                        >
-                          {previewText(user)}
-                        </span>
-                        {unseen > 0 && (
-                          <span className="text-[10px] min-w-5 h-5 px-1 flex justify-center items-center rounded-full bg-violet-500 shrink-0">
-                            {unseen > 99 ? "99+" : unseen}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 sm:px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {users.length === 0 && (
+          <div className="text-center mt-10 px-4">
+            <div className="w-12 h-12 mx-auto rounded-full bg-accent-soft text-accent-text flex items-center justify-center mb-3">
+              <CompassIcon className="w-5 h-5" />
             </div>
-        </>
+            <p className="font-medium">No chats yet</p>
+            <p className="text-sm text-muted mt-1">
+              Add friends to start chatting. They'll show up here once they accept.
+            </p>
+            <button type="button" onClick={() => setView("discover")} className={`${button.primary} mt-4`}>
+              Find people
+            </button>
+          </div>
+        )}
+        {users.length > 0 && filteredUsers.length === 0 && (
+          <p className="text-center text-sm text-muted mt-6">No chats match your search</p>
+        )}
+
+        <div className="flex flex-col gap-0.5">
+          {filteredUsers.map((user) => {
+            const unseen = unseenMessages[user._id] || 0;
+            const isOnline = onlineUsers.includes(user._id);
+            const active = view === "chats" && selectedUser?._id === user._id;
+            return (
+              <button
+                type="button"
+                key={user._id}
+                onClick={() => selectUser(user)}
+                aria-current={active ? "true" : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-left transition-colors ${
+                  active ? "bg-accent-soft" : "hover:bg-surface-2"
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <img
+                    src={user.profilePic || assets.avatar_icon}
+                    alt=""
+                    className="w-11 h-11 rounded-full object-cover bg-surface-2"
+                  />
+                  {isOnline && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-online ring-2 ring-surface" />
+                  )}
+                </div>
+
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`truncate ${unseen > 0 ? "font-semibold" : "font-medium"}`}>{user.fullName}</p>
+                    {user.lastMessage && (
+                      <span className={`text-xs shrink-0 ${unseen > 0 ? "text-accent-text font-medium" : "text-subtle"}`}>
+                        {formatSidebarTime(user.lastMessage.createdAt)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <span className={`text-sm truncate ${unseen > 0 ? "text-fg" : "text-muted"}`}>
+                      {previewText(user)}
+                    </span>
+                    {unseen > 0 && (
+                      <span className="text-xs font-medium min-w-5 h-5 px-1.5 flex justify-center items-center rounded-full bg-accent text-accent-fg shrink-0">
+                        {unseen > 99 ? "99+" : unseen}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </aside>
   );
 };
 

@@ -5,7 +5,7 @@ import { FriendContext } from "../../context/FriendContext";
 import { timeAgo } from "../lib/utils";
 import PageShell, { CardGrid, EmptyState, FilterChips } from "./PageShell";
 import PersonCard from "./PersonCard";
-import { cardButton } from "../lib/ui";
+import { button, cardButton } from "../lib/ui";
 import { CheckIcon, CompassIcon, InboxIcon, XIcon } from "./icons";
 
 // Full-page view of friend requests received and sent
@@ -25,7 +25,7 @@ const RequestsView = () => {
   const list = tab === "received" ? incoming : outgoing;
 
   const findPeople = (
-    <button type="button" onClick={() => setView("discover")} className={`${cardButton.primary} px-5`}>
+    <button type="button" onClick={() => setView("discover")} className={button.primary}>
       <CompassIcon /> Discover people
     </button>
   );

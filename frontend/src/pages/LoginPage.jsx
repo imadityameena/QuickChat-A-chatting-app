@@ -5,6 +5,9 @@ import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
 import { readFileAsDataURL, validateImageFile } from "../lib/utils";
 import UsernameInput from "../components/UsernameInput";
+import Logo from "../components/Logo";
+import { ArrowLeftIcon } from "../components/icons";
+import { formButton, input } from "../lib/ui";
 import {
   formatName,
   MAX_NAME_LENGTH,
@@ -20,10 +23,8 @@ import {
   validateUsername,
 } from "../lib/validation";
 
-const inputBase =
-  "w-full p-2.5 bg-transparent border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base sm:text-sm";
-const buttonClass =
-  "py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed";
+const inputBase = input;
+const buttonClass = formButton;
 const strengthColors = ["bg-red-500", "bg-red-500", "bg-yellow-500", "bg-lime-500", "bg-green-500"];
 
 const EyeIcon = ({ open }) => (
@@ -37,12 +38,12 @@ const EyeIcon = ({ open }) => (
 // One labelled input with an error message underneath
 const Field = ({ label, id, error, children }) => (
   <div className="flex flex-col gap-1">
-    <label htmlFor={id} className="text-sm text-gray-300">
+    <label htmlFor={id} className="text-sm font-medium text-fg">
       {label}
     </label>
     {children}
     {error && (
-      <p id={`${id}-error`} role="alert" className="text-xs text-red-400">
+      <p id={`${id}-error`} role="alert" className="text-xs text-danger">
         {error}
       </p>
     )}
@@ -75,19 +76,19 @@ const PasswordInput = ({ id, value, onChange, onBlur, error, autoComplete, place
           placeholder={placeholder}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={`${inputBase} pr-10 ${error ? "border-red-400" : "border-gray-500"}`}
+          className={`${inputBase} pr-10 ${error ? "border-danger" : "border-line"}`}
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? "Hide password" : "Show password"}
           title={visible ? "Hide password" : "Show password"}
-          className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white cursor-pointer"
+          className="absolute inset-y-0 right-0 px-3 flex items-center text-subtle hover:text-fg cursor-pointer"
         >
           <EyeIcon open={visible} />
         </button>
       </div>
-      {capsLock && <p className="text-xs text-yellow-400">Caps Lock is on</p>}
+      {capsLock && <p className="text-xs text-amber-500">Caps Lock is on</p>}
     </>
   );
 };
@@ -222,25 +223,35 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl p-4">
-      <img src={assets.logo_big} alt="QuickChat" className="w-[min(30vw,250px)] max-sm:w-32" />
+    <div className="min-h-dvh flex items-center justify-center gap-10 lg:gap-20 max-md:flex-col p-4 py-10">
+      {/* Brand side */}
+      <div className="flex flex-col items-center md:items-start text-center md:text-left max-w-sm">
+        <Logo size="lg" className="max-md:hidden" />
+        <Logo className="md:hidden" />
+        <p className="max-md:hidden mt-5 text-2xl font-semibold leading-snug text-fg">
+          Chat with your friends, in real time.
+        </p>
+        <p className="max-md:hidden mt-3 text-muted">
+          Find people, send a friend request, and start talking once they accept.
+        </p>
+      </div>
 
       <form
         onSubmit={onSubmitHandler}
         noValidate
-        className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-4 rounded-lg shadow-lg w-[min(100%,400px)]"
+        className="bg-surface text-fg border border-line p-6 sm:p-8 flex flex-col gap-4 rounded-2xl shadow-xl shadow-black/10 w-[min(100%,420px)]"
       >
         {isSignup && isDataSubmitted ? (
           <>
-            <h2 className="font-medium text-2xl flex justify-between items-center">
+            <h2 className="font-semibold text-2xl flex justify-between items-center">
               Almost done
               <button
                 type="button"
                 aria-label="Back"
                 onClick={() => setIsDataSubmitted(false)}
-                className="cursor-pointer"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-muted hover:text-fg hover:bg-surface-3 cursor-pointer"
               >
-                <img src={assets.arrow_icon} alt="" className="w-5" />
+                <ArrowLeftIcon className="w-5 h-5" />
               </button>
             </h2>
 
@@ -250,9 +261,9 @@ const LoginPage = () => {
                 <img
                   src={photoPreview || assets.avatar_icon}
                   alt="Profile preview"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-500 group-hover:border-violet-400"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-line bg-surface-2 group-hover:border-accent transition-colors"
                 />
-                <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-violet-600 border-2 border-[#1d1838] flex items-center justify-center text-sm">
+                <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-accent text-accent-fg border-2 border-surface flex items-center justify-center text-sm">
                   {photo ? "✎" : "+"}
                 </span>
               </label>
@@ -264,13 +275,13 @@ const LoginPage = () => {
                 hidden
               />
               <div className="text-sm min-w-0">
-                <p className="text-white">Profile picture</p>
-                <p className="text-gray-400 text-xs">Optional · JPG, PNG or WebP up to 5MB</p>
+                <p className="font-medium">Profile picture</p>
+                <p className="text-muted text-xs">Optional · JPG, PNG or WebP up to 5MB</p>
                 {photo && (
                   <button
                     type="button"
                     onClick={() => setPhoto(null)}
-                    className="mt-1 text-xs text-red-300 hover:underline cursor-pointer"
+                    className="mt-1 text-xs text-danger hover:underline cursor-pointer"
                   >
                     Remove
                   </button>
@@ -283,10 +294,10 @@ const LoginPage = () => {
               value={bio}
               rows={4}
               maxLength={200}
-              className={`${inputBase} border-gray-500`}
+              className={`${inputBase} border-line resize-none`}
               placeholder="Provide a short bio... (optional)"
             />
-            <p className="-mt-3 text-right text-xs text-gray-400">{bio.length}/200</p>
+            <p className="-mt-3 text-right text-xs text-subtle">{bio.length}/200</p>
 
             <button type="submit" disabled={submitting} className={buttonClass}>
               {submitting ? "Creating account…" : "Create Account"}
@@ -295,8 +306,8 @@ const LoginPage = () => {
         ) : (
           <>
             <div>
-              <h2 className="font-medium text-2xl">{isSignup ? "Create an account" : "Welcome back"}</h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <h2 className="font-semibold text-2xl">{isSignup ? "Create an account" : "Welcome back"}</h2>
+              <p className="text-sm text-muted mt-1">
                 {isSignup ? "Sign up to start chatting" : "Log in to continue to QuickChat"}
               </p>
             </div>
@@ -318,7 +329,7 @@ const LoginPage = () => {
                   autoComplete="name"
                   placeholder="John Doe"
                   aria-invalid={!!showError("fullName")}
-                  className={`${inputBase} ${showError("fullName") ? "border-red-400" : "border-gray-500"}`}
+                  className={`${inputBase} ${showError("fullName") ? "border-danger" : "border-line"}`}
                 />
               </Field>
             )}
@@ -359,10 +370,10 @@ const LoginPage = () => {
                 spellCheck={false}
                 placeholder={isSignup ? "you@example.com" : "you@example.com or your.username"}
                 aria-invalid={!!showError("email")}
-                className={`${inputBase} ${showError("email") ? "border-red-400" : "border-gray-500"}`}
+                className={`${inputBase} ${showError("email") ? "border-danger" : "border-line"}`}
               />
               {emailSuggestion && (
-                <p className="text-xs text-gray-300">
+                <p className="text-xs text-muted">
                   Did you mean{" "}
                   <button
                     type="button"
@@ -370,7 +381,7 @@ const LoginPage = () => {
                       setEmail(emailSuggestion);
                       setServerEmailError("");
                     }}
-                    className="text-violet-400 underline cursor-pointer"
+                    className="text-accent-text font-medium underline cursor-pointer"
                   >
                     {emailSuggestion}
                   </button>
@@ -396,12 +407,12 @@ const LoginPage = () => {
                       <span
                         key={i}
                         className={`h-1 flex-1 rounded-full ${
-                          i <= Math.max(strength.score, 1) ? strengthColors[strength.score] : "bg-gray-600"
+                          i <= Math.max(strength.score, 1) ? strengthColors[strength.score] : "bg-surface-3"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-gray-400 w-14 text-right">{strength.label}</span>
+                  <span className="text-xs text-muted w-14 text-right">{strength.label}</span>
                 </div>
               )}
             </Field>
@@ -422,7 +433,7 @@ const LoginPage = () => {
 
             {isSignup && (
               <div className="flex flex-col gap-1">
-                <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
                   <input
                     type="checkbox"
                     checked={agreed}
@@ -430,11 +441,11 @@ const LoginPage = () => {
                       setAgreed(e.target.checked);
                       touch("agreed");
                     }}
-                    className="accent-violet-500"
+                    className="accent-[var(--accent)] w-4 h-4"
                   />
                   I agree to the terms of use & privacy policy.
                 </label>
-                {showError("agreed") && <p className="text-xs text-red-400">{errors.agreed}</p>}
+                {showError("agreed") && <p className="text-xs text-danger">{errors.agreed}</p>}
               </div>
             )}
 
@@ -448,12 +459,12 @@ const LoginPage = () => {
                 : "Login Now"}
             </button>
 
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted text-center">
               {isSignup ? "Already have an account? " : "Don't have an account? "}
               <button
                 type="button"
                 onClick={() => switchTo(isSignup ? "Login" : "Sign up")}
-                className="font-medium text-violet-400 cursor-pointer hover:underline"
+                className="font-medium text-accent-text cursor-pointer hover:underline"
               >
                 {isSignup ? "Login here" : "Sign up"}
               </button>

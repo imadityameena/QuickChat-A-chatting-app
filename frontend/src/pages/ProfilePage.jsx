@@ -6,6 +6,8 @@ import { AuthContext } from "../../context/AuthContext";
 import { readFileAsDataURL, validateImageFile } from "../lib/utils";
 import { formatName, normalizeUsername } from "../lib/validation";
 import UsernameInput from "../components/UsernameInput";
+import { ArrowLeftIcon } from "../components/icons";
+import { formButton, input } from "../lib/ui";
 
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
@@ -64,20 +66,20 @@ const ProfilePage = () => {
   const avatar = previewUrl || authUser.profilePic || assets.avatar_icon;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl backdrop-blur-2xl text-gray-300 border-2 border-gray-600 flex items-center justify-between max-sm:flex-col-reverse rounded-lg">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-8 sm:p-10 flex-1 w-full">
-          <h3 className="text-lg flex items-center gap-3">
+    <div className="min-h-dvh flex items-center justify-center p-4 py-8">
+      <div className="w-full max-w-2xl bg-surface text-fg border border-line shadow-xl shadow-black/10 flex items-center justify-between max-sm:flex-col-reverse rounded-2xl">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 sm:p-10 flex-1 w-full">
+          <h1 className="text-xl font-semibold flex items-center gap-2">
             <button
               type="button"
               aria-label="Back to chats"
               onClick={() => navigate("/")}
-              className="cursor-pointer"
+              className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-muted hover:text-fg hover:bg-surface-3 cursor-pointer"
             >
-              <img src={assets.arrow_icon} alt="" className="w-4" />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
-            Profile details
-          </h3>
+            Edit profile
+          </h1>
 
           <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer w-fit">
             <input
@@ -87,8 +89,8 @@ const ProfilePage = () => {
               accept="image/png, image/jpeg, image/webp"
               hidden
             />
-            <img src={avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
-            <span className="hover:text-violet-300">
+            <img src={avatar} alt="" className="w-12 h-12 rounded-full object-cover bg-surface-2" />
+            <span className="text-sm font-medium text-accent-text hover:underline">
               {authUser.profilePic || selectedImg ? "Change profile image" : "Upload profile image"}
             </span>
           </label>
@@ -101,7 +103,7 @@ const ProfilePage = () => {
             required
             maxLength={50}
             placeholder="Your name"
-            className="p-2 bg-transparent border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className={`${input} border-line`}
           />
 
           <div className="flex flex-col gap-1">
@@ -122,20 +124,20 @@ const ProfilePage = () => {
             placeholder="Write profile bio"
             maxLength={200}
             rows={4}
-            className="p-2 bg-transparent border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className={`${input} border-line resize-none`}
           />
 
           <button
             type="submit"
             disabled={saving}
-            className="bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className={formButton}
           >
             {saving ? "Saving…" : "Save"}
           </button>
         </form>
 
         <img
-          className="w-44 max-w-44 aspect-square rounded-full object-cover mx-10 max-sm:mt-10"
+          className="w-40 max-w-40 aspect-square rounded-full object-cover mx-10 max-sm:mt-8 bg-surface-2 ring-4 ring-accent-soft"
           src={previewUrl || authUser.profilePic || assets.logo_icon}
           alt=""
         />

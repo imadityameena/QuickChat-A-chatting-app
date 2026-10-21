@@ -11,8 +11,8 @@ import { ChatIcon, CheckIcon, ClockIcon, UserPlusIcon, XIcon } from "./icons";
 
 const Stat = ({ value, label }) => (
   <div className="flex-1 text-center px-2">
-    <p className="text-lg font-semibold text-white leading-tight">{value}</p>
-    <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>
+    <p className="text-lg font-semibold text-fg leading-tight">{value}</p>
+    <p className="text-xs text-subtle mt-0.5">{label}</p>
   </div>
 );
 
@@ -140,34 +140,34 @@ const ProfileModal = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4"
       onMouseDown={(e) => e.target === e.currentTarget && closeProfile()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={profile ? `${profile.fullName}'s profile` : "Profile"}
-        className="relative w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-[#1a1730] border border-white/10 shadow-2xl text-white pb-[env(safe-area-inset-bottom)]"
+        className="relative w-full sm:max-w-md max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-surface border border-line shadow-2xl text-fg pb-[env(safe-area-inset-bottom)]"
       >
         <button
           ref={closeRef}
           type="button"
           onClick={closeProfile}
           aria-label="Close profile"
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center cursor-pointer"
         >
           <XIcon />
         </button>
 
-        <div className="h-28 bg-gradient-to-r from-violet-600/60 via-fuchsia-500/40 to-indigo-600/60" />
+        <div className="h-28 bg-gradient-to-r from-accent/60 via-fuchsia-500/35 to-indigo-500/60" />
 
         {showSkeleton ? (
           <div className="flex flex-col items-center px-6 pb-8 -mt-14 animate-pulse">
-            <div className="w-28 h-28 rounded-full bg-white/10 ring-4 ring-[#1a1730]" />
-            <div className="mt-4 h-4 w-40 rounded bg-white/10" />
-            <div className="mt-2 h-3 w-24 rounded bg-white/10" />
-            <div className="mt-6 h-12 w-full rounded-xl bg-white/10" />
-            <div className="mt-6 h-10 w-full rounded-full bg-white/10" />
+            <div className="w-28 h-28 rounded-full bg-surface-3 ring-4 ring-surface" />
+            <div className="mt-4 h-4 w-40 rounded bg-surface-3" />
+            <div className="mt-2 h-3 w-24 rounded bg-surface-3" />
+            <div className="mt-6 h-12 w-full rounded-xl bg-surface-3" />
+            <div className="mt-6 h-10 w-full rounded-full bg-surface-3" />
           </div>
         ) : (
           <div className={`flex flex-col items-center text-center px-6 pb-6 -mt-14 ${loading ? "opacity-80" : ""}`}>
@@ -175,32 +175,32 @@ const ProfileModal = () => {
               <img
                 src={profile.profilePic || assets.avatar_icon}
                 alt=""
-                className="w-28 h-28 rounded-full object-cover ring-4 ring-[#1a1730] bg-[#1a1730]"
+                className="w-28 h-28 rounded-full object-cover ring-4 ring-surface bg-surface-2"
               />
               {isOnline && (
-                <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-green-500 ring-[3px] ring-[#1a1730]" />
+                <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-online ring-[3px] ring-surface" />
               )}
             </div>
 
             <h2 className="mt-3 text-xl font-semibold break-words max-w-full">{profile.fullName}</h2>
-            {profile.username && <p className="text-sm text-violet-300">@{profile.username}</p>}
-            <p className={`text-xs mt-1 ${isOnline ? "text-green-400" : "text-gray-400"}`}>
+            {profile.username && <p className="text-sm text-accent-text">@{profile.username}</p>}
+            <p className={`text-xs mt-1 ${isOnline ? "text-success-text" : "text-subtle"}`}>
               {profile.relationship === "self" ? "This is you" : isOnline ? "Online now" : formatLastSeen(profile.lastSeen)}
             </p>
 
-            <p className="mt-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">
-              {profile.bio || <span className="text-gray-500 italic">No bio yet</span>}
+            <p className="mt-4 text-sm text-muted leading-relaxed whitespace-pre-wrap break-words">
+              {profile.bio || <span className="text-subtle italic">No bio yet</span>}
             </p>
 
-            <div className="mt-5 w-full flex divide-x divide-white/10 rounded-xl bg-white/5 border border-white/10 py-3">
+            <div className="mt-5 w-full flex divide-x divide-line rounded-xl bg-surface-2 border border-line py-3">
               <Stat value={profile.friendCount} label={profile.friendCount === 1 ? "Friend" : "Friends"} />
               {profile.relationship !== "self" && <Stat value={profile.mutualCount} label="Mutual" />}
               <Stat value={memberDuration(profile.createdAt)} label="On QuickChat" />
             </div>
-            <p className="mt-2 text-[11px] text-gray-500">Joined {formatMonthYear(profile.createdAt)}</p>
+            <p className="mt-2 text-xs text-subtle">Joined {formatMonthYear(profile.createdAt)}</p>
 
             {profile.mutualFriends?.length > 0 && (
-              <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted">
                 <div className="flex -space-x-2">
                   {profile.mutualFriends.map((f) => (
                     <img
@@ -208,7 +208,7 @@ const ProfileModal = () => {
                       src={f.profilePic || assets.avatar_icon}
                       alt={f.fullName}
                       title={f.fullName}
-                      className="w-6 h-6 rounded-full object-cover ring-2 ring-[#1a1730]"
+                      className="w-6 h-6 rounded-full object-cover ring-2 ring-surface"
                     />
                   ))}
                 </div>

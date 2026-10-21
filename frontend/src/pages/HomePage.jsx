@@ -15,7 +15,7 @@ const HomePage = () => {
     // tablets show list + chat, large screens add the profile panel.
     <div className="w-full h-dvh overflow-hidden">
       <div
-        className={`backdrop-blur-xl h-full grid grid-cols-1 relative ${
+        className={`h-full grid grid-cols-1 relative ${
           view === "chats" && selectedUser
             ? "md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr] xl:grid-cols-[360px_1fr_320px]"
             : "md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]"

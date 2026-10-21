@@ -1,19 +1,17 @@
 import React from "react";
-import assets from "../assets/assets";
+import Logo from "./Logo";
 import ViewTabs from "./ViewTabs";
 
 // Layout for the Discover and Requests pages: header + scrollable card area.
-// On phones the sidebar is hidden, so the tabs are shown here instead.
+// On phones the sidebar is hidden, so the logo and tabs are shown here instead.
 const PageShell = ({ title, subtitle, toolbar, children }) => (
-  <section className="h-full min-h-0 flex flex-col text-white">
-    <header className="shrink-0 px-4 sm:px-6 lg:px-8 pt-[max(1rem,env(safe-area-inset-top))] md:pt-6 pb-4 border-b border-white/10">
-      <div className="md:hidden flex items-center justify-between mb-4">
-        <img src={assets.logo} alt="QuickChat" className="max-w-32" />
-      </div>
+  <section className="h-full min-h-0 flex flex-col text-fg">
+    <header className="shrink-0 px-4 sm:px-6 lg:px-8 pt-[max(1rem,env(safe-area-inset-top))] md:pt-6 pb-4 border-b border-line bg-surface/70 backdrop-blur-md">
+      <Logo className="md:hidden mb-4" />
       <ViewTabs className="md:hidden mb-5" />
 
-      <h1 className="text-xl sm:text-2xl font-semibold">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+      <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{title}</h1>
+      {subtitle && <p className="text-sm text-muted mt-1">{subtitle}</p>}
       {toolbar && <div className="mt-4">{toolbar}</div>}
     </header>
 
@@ -34,12 +32,12 @@ export const CardGrid = ({ children }) => (
 export const EmptyState = ({ Icon, title, text, action }) => (
   <div className="flex flex-col items-center justify-center text-center py-16 px-4">
     {Icon && (
-      <div className="w-14 h-14 rounded-full bg-violet-600/20 text-violet-300 flex items-center justify-center mb-4">
+      <div className="w-14 h-14 rounded-full bg-accent-soft text-accent-text flex items-center justify-center mb-4">
         <Icon className="w-6 h-6" />
       </div>
     )}
-    <p className="text-white font-medium">{title}</p>
-    {text && <p className="text-sm text-gray-400 mt-1 max-w-sm">{text}</p>}
+    <p className="font-semibold">{title}</p>
+    {text && <p className="text-sm text-muted mt-1 max-w-sm">{text}</p>}
     {action && <div className="mt-5">{action}</div>}
   </div>
 );
@@ -53,14 +51,14 @@ export const FilterChips = ({ options, value, onChange }) => (
         type="button"
         onClick={() => onChange(id)}
         aria-pressed={value === id}
-        className={`text-xs px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+        className={`text-sm px-3.5 py-1.5 rounded-full border cursor-pointer transition-colors ${
           value === id
-            ? "bg-white text-[#1a1730] border-white font-medium"
-            : "border-white/20 text-gray-300 hover:border-white/50 hover:text-white"
+            ? "bg-fg text-app border-fg font-medium"
+            : "border-line bg-surface text-muted hover:text-fg hover:border-muted"
         }`}
       >
         {label}
-        {count !== undefined && <span className="ml-1 opacity-70">{count}</span>}
+        {count !== undefined && <span className="ml-1.5 opacity-70">{count}</span>}
       </button>
     ))}
   </div>

@@ -4,7 +4,7 @@ import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen } from "../lib/utils";
 import PageShell, { CardGrid, EmptyState, FilterChips } from "./PageShell";
 import PersonCard, { PersonCardSkeleton } from "./PersonCard";
-import { cardButton } from "../lib/ui";
+import { button, cardButton } from "../lib/ui";
 import { CheckIcon, ClockIcon, SearchIcon, UserPlusIcon, UsersIcon, XIcon } from "./icons";
 
 // Full-page grid of people to add as friends
@@ -58,7 +58,7 @@ const DiscoverView = () => {
             onClick={() => declineRequest(request)}
             aria-label={`Decline ${user.fullName}`}
             title="Decline"
-            className={`${cardButton.ghost} flex-none w-9`}
+            className={button.iconGhost}
           >
             <XIcon />
           </button>
@@ -90,14 +90,14 @@ const DiscoverView = () => {
 
   const toolbar = (
     <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-      <label className="flex items-center gap-2 w-full lg:max-w-sm bg-[#282142] rounded-full px-4 py-2.5 focus-within:ring-2 focus-within:ring-violet-500">
-        <SearchIcon className="w-4 h-4 text-gray-400 shrink-0" />
+      <label className="flex items-center gap-2 w-full lg:max-w-sm bg-surface-2 border border-line rounded-full px-4 py-2.5 transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft">
+        <SearchIcon className="w-4 h-4 text-subtle shrink-0" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           type="search"
           placeholder="Search by name or @username"
-          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm placeholder-gray-400"
+          className="flex-1 min-w-0 bg-transparent outline-none text-fg text-base sm:text-sm placeholder:text-subtle"
         />
       </label>
       <FilterChips

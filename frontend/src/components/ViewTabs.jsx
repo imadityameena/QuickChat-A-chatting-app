@@ -16,7 +16,7 @@ const ViewTabs = ({ className = "" }) => {
   const totalUnseen = Object.values(unseenMessages).reduce((sum, n) => sum + n, 0);
 
   return (
-    <div role="tablist" className={`grid grid-cols-3 gap-1 p-1 rounded-full bg-[#282142] ${className}`}>
+    <div role="tablist" className={`grid grid-cols-3 gap-1 p-1 rounded-full bg-surface-2 border border-line ${className}`}>
       {TABS.map((tab) => {
         const { id, label } = tab;
         const TabIcon = tab.Icon;
@@ -29,14 +29,19 @@ const ViewTabs = ({ className = "" }) => {
             role="tab"
             aria-selected={active}
             onClick={() => setView(id)}
-            className={`relative flex items-center justify-center gap-1.5 text-xs py-2 rounded-full cursor-pointer transition-colors ${
-              active ? "bg-violet-600 text-white shadow-sm" : "text-gray-300 hover:text-white"
+            className={`flex items-center justify-center gap-1 text-sm py-1.5 rounded-full cursor-pointer transition-colors ${
+              active ? "bg-accent text-accent-fg font-medium shadow-sm" : "text-muted hover:text-fg"
             }`}
           >
-            <TabIcon className="w-3.5 h-3.5" />
+            <TabIcon className={`w-4 h-4 shrink-0 max-[400px]:hidden ${badge > 0 ? "max-lg:hidden" : ""}`} />
             {label}
             {badge > 0 && (
-              <span className="absolute -top-1 -right-0.5 text-[10px] min-w-4 h-4 px-1 flex justify-center items-center rounded-full bg-red-500 text-white">
+              <span
+                aria-label={`${badge} new`}
+                className={`text-[11px] font-semibold min-w-[18px] h-[18px] px-1 flex justify-center items-center rounded-full ${
+                  active ? "bg-accent-fg text-accent" : "bg-red-600 text-white"
+                }`}
+              >
                 {badge > 99 ? "99+" : badge}
               </span>
             )}

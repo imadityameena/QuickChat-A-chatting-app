@@ -5,10 +5,10 @@ import assets from "../assets/assets";
 // `badge` is a small label on the cover, `meta` a line under the username,
 // and `children` the action buttons at the bottom.
 const PersonCard = ({ user, online, badge, meta, onOpen, children }) => (
-  <article className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] hover:border-violet-400/40 transition-colors overflow-hidden">
-    <div className="relative h-16 bg-gradient-to-r from-violet-600/50 via-fuchsia-500/30 to-indigo-600/50">
+  <article className="group flex flex-col rounded-2xl border border-line bg-surface hover:border-accent/50 hover:shadow-lg hover:shadow-black/10 transition overflow-hidden">
+    <div className="relative h-16 bg-gradient-to-r from-accent/40 via-fuchsia-500/25 to-indigo-500/40">
       {badge && (
-        <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-black/40 text-violet-100 backdrop-blur-sm">
+        <span className="absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full bg-surface text-accent-text shadow-sm">
           {badge}
         </span>
       )}
@@ -19,17 +19,17 @@ const PersonCard = ({ user, online, badge, meta, onOpen, children }) => (
         type="button"
         onClick={onOpen}
         aria-label={`View ${user.fullName}'s profile`}
-        className="relative rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-violet-400"
+        className="relative rounded-full cursor-pointer"
       >
         <img
           src={user.profilePic || assets.avatar_icon}
           alt=""
-          className="w-[72px] h-[72px] rounded-full object-cover ring-4 ring-[#1a1730] bg-[#1a1730] group-hover:ring-violet-500/40 transition"
+          className="w-[72px] h-[72px] rounded-full object-cover ring-4 ring-surface bg-surface-2"
         />
         {online && (
           <span
             title="Online"
-            className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-green-500 ring-2 ring-[#1a1730]"
+            className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-online ring-2 ring-surface"
           />
         )}
       </button>
@@ -37,14 +37,14 @@ const PersonCard = ({ user, online, badge, meta, onOpen, children }) => (
       <button
         type="button"
         onClick={onOpen}
-        className="mt-2 font-medium text-white truncate max-w-full hover:underline cursor-pointer"
+        className="mt-2 font-semibold text-fg truncate max-w-full hover:underline cursor-pointer"
       >
         {user.fullName}
       </button>
-      {user.username && <p className="text-xs text-violet-300 truncate max-w-full">@{user.username}</p>}
-      {meta && <p className="mt-0.5 text-[11px] text-gray-400 truncate max-w-full">{meta}</p>}
+      {user.username && <p className="text-sm text-accent-text truncate max-w-full">@{user.username}</p>}
+      {meta && <p className="mt-0.5 text-xs text-subtle truncate max-w-full">{meta}</p>}
 
-      <p className="mt-2 text-xs text-gray-400 leading-relaxed line-clamp-2 min-h-[2.5rem] break-words">
+      <p className="mt-2 text-sm text-muted leading-relaxed line-clamp-2 min-h-[2.75rem] break-words">
         {user.bio || "Hey there! I'm on QuickChat."}
       </p>
 
@@ -53,17 +53,17 @@ const PersonCard = ({ user, online, badge, meta, onOpen, children }) => (
   </article>
 );
 
-// Grey placeholder card shown while loading
+// Placeholder card shown while loading
 export const PersonCardSkeleton = () => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden animate-pulse">
-    <div className="h-16 bg-white/10" />
+  <div className="rounded-2xl border border-line bg-surface overflow-hidden animate-pulse">
+    <div className="h-16 bg-surface-3" />
     <div className="flex flex-col items-center px-4 pb-4 -mt-9">
-      <div className="w-[72px] h-[72px] rounded-full bg-white/10 ring-4 ring-[#1a1730]" />
-      <div className="mt-3 h-3 w-24 rounded bg-white/10" />
-      <div className="mt-2 h-2.5 w-16 rounded bg-white/10" />
-      <div className="mt-4 h-2.5 w-full rounded bg-white/10" />
-      <div className="mt-1.5 h-2.5 w-3/4 rounded bg-white/10" />
-      <div className="mt-5 h-9 w-full rounded-full bg-white/10" />
+      <div className="w-[72px] h-[72px] rounded-full bg-surface-3 ring-4 ring-surface" />
+      <div className="mt-3 h-3 w-24 rounded bg-surface-3" />
+      <div className="mt-2 h-2.5 w-16 rounded bg-surface-3" />
+      <div className="mt-4 h-2.5 w-full rounded bg-surface-3" />
+      <div className="mt-1.5 h-2.5 w-3/4 rounded bg-surface-3" />
+      <div className="mt-5 h-9 w-full rounded-full bg-surface-3" />
     </div>
   </div>
 );

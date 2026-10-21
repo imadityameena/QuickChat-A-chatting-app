@@ -10,14 +10,21 @@ const App = () => {
   const { authUser, authLoading } = useContext(AuthContext);
 
   return (
-    <div className="bg-[url('/bgImage.svg')] bg-cover bg-center min-h-screen">
+    <div className="min-h-dvh text-fg">
       <Toaster
-        toastOptions={{ style: { background: "#282142", color: "#fff" } }}
+        toastOptions={{
+          style: {
+            background: "var(--surface)",
+            color: "var(--fg)",
+            border: "1px solid var(--line)",
+            fontSize: "14px",
+          },
+        }}
       />
       {authLoading ? (
         // Wait for the saved session check so refreshes don't bounce to /login
         <div className="h-screen flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-violet-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <Routes>

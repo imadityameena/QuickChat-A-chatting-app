@@ -4,10 +4,12 @@ import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen } from "../lib/utils";
+import { button } from "../lib/ui";
 
+// Details about the person in the open chat (large screens only)
 const RightSidebar = () => {
   const { selectedUser, messages } = useContext(ChatContext);
-  const { logout, onlineUsers } = useContext(AuthContext);
+  const { onlineUsers } = useContext(AuthContext);
   const { removeFriend, busy, openProfile } = useContext(FriendContext);
 
   // All images shared in this conversation, newest first
@@ -17,73 +19,77 @@ const RightSidebar = () => {
   );
 
   if (!selectedUser) return null;
+  const isOnline = onlineUsers.includes(selectedUser._id);
 
   return (
-    <div className="bg-[#8185B2]/10 text-white w-full h-full flex flex-col overflow-hidden border-l border-white/10 max-xl:hidden">
-      <div className="pt-12 flex flex-col items-center gap-2 text-xs font-light px-6 text-center">
-        <img
-          src={selectedUser.profilePic || assets.avatar_icon}
-          alt=""
-          className="w-20 aspect-square rounded-full object-cover"
-        />
-        <h1 className="text-xl font-medium flex items-center gap-2">
-          {onlineUsers.includes(selectedUser._id) && (
-            <span className="w-2 h-2 rounded-full bg-green-500" />
+    <aside className="bg-surface text-fg w-full h-full flex flex-col overflow-hidden border-l border-line max-xl:hidden">
+      <div className="pt-10 pb-6 flex flex-col items-center gap-1 px-6 text-center">
+        <div className="relative mb-2">
+          <img
+            src={selectedUser.profilePic || assets.avatar_icon}
+            alt=""
+            className="w-24 h-24 rounded-full object-cover bg-surface-2"
+          />
+          {isOnline && (
+            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-online ring-[3px] ring-surface" />
           )}
-          {selectedUser.fullName}
-        </h1>
-        {selectedUser.username && <p className="text-violet-300 text-sm">@{selectedUser.username}</p>}
-        <p className="text-gray-400">
-          {onlineUsers.includes(selectedUser._id) ? "Online" : formatLastSeen(selectedUser.lastSeen)}
+        </div>
+        <h2 className="text-lg font-semibold break-words max-w-full">{selectedUser.fullName}</h2>
+        {selectedUser.username && <p className="text-sm text-accent-text">@{selectedUser.username}</p>}
+        <p className={`text-xs ${isOnline ? "text-success-text" : "text-subtle"}`}>
+          {isOnline ? "Online" : formatLastSeen(selectedUser.lastSeen)}
         </p>
-        {selectedUser.bio && <p className="text-gray-300 break-words">{selectedUser.bio}</p>}
-        <button
-          type="button"
-          onClick={() => openProfile(selectedUser)}
-          className="mt-2 px-4 py-1.5 rounded-full border border-white/20 hover:border-violet-400 text-xs cursor-pointer"
-        >
+        {selectedUser.bio && (
+          <p className="mt-2 text-sm text-muted break-words leading-relaxed">{selectedUser.bio}</p>
+        )}
+        <button type="button" onClick={() => openProfile(selectedUser)} className={`${button.secondary} mt-4`}>
           View full profile
         </button>
       </div>
 
-      <hr className="border-[#ffffff50] my-4" />
+      <div className="border-t border-line" />
 
-      <div className="px-5 text-xs flex-1 min-h-0 flex flex-col">
-        <p>Media</p>
+      <div className="px-5 pt-4 flex-1 min-h-0 flex flex-col">
+        <p className="text-sm font-medium">
+          Shared media {msgImages.length > 0 && <span className="text-subtle font-normal">· {msgImages.length}</span>}
+        </p>
         {msgImages.length === 0 ? (
-          <p className="mt-2 text-gray-400">No media shared yet</p>
+          <p className="mt-2 text-sm text-muted">No photos shared yet</p>
         ) : (
-          <div className="mt-2 overflow-y-auto grid grid-cols-2 gap-3 opacity-90 pb-2">
+          <div className="mt-3 overflow-y-auto grid grid-cols-3 gap-2 pb-2">
             {msgImages.map((url) => (
-              <a key={url} href={url} target="_blank" rel="noreferrer" className="rounded">
-                <img src={url} alt="" loading="lazy" className="w-full aspect-square object-cover rounded-md" />
+              <a key={url} href={url} target="_blank" rel="noreferrer" className="rounded-lg overflow-hidden">
+                <img
+                  src={url}
+                  alt=""
+                  loading="lazy"
+                  className="w-full aspect-square object-cover hover:opacity-90 transition-opacity"
+                />
               </a>
             ))}
           </div>
         )}
       </div>
 
-      <button
-        type="button"
-        disabled={!!busy[selectedUser._id]}
-        onClick={() => {
-          if (window.confirm(`Remove ${selectedUser.fullName} from your friends? You won't be able to message each other until you add each other again.`)) {
-            removeFriend(selectedUser);
-          }
-        }}
-        className="mx-auto mt-4 shrink-0 text-xs text-red-300 hover:text-red-200 hover:underline cursor-pointer disabled:opacity-50"
-      >
-        Remove friend
-      </button>
-
-      <button
-        type="button"
-        onClick={logout}
-        className="mx-auto my-5 shrink-0 bg-gradient-to-r from-purple-400 to-violet-600 text-white text-sm font-light py-2 px-16 rounded-full cursor-pointer"
-      >
-        Logout
-      </button>
-    </div>
+      <div className="border-t border-line p-4">
+        <button
+          type="button"
+          disabled={!!busy[selectedUser._id]}
+          onClick={() => {
+            if (
+              window.confirm(
+                `Remove ${selectedUser.fullName} from your friends? You won't be able to message each other until you add each other again.`
+              )
+            ) {
+              removeFriend(selectedUser);
+            }
+          }}
+          className={`${button.danger} w-full`}
+        >
+          Remove friend
+        </button>
+      </div>
+    </aside>
   );
 };
 

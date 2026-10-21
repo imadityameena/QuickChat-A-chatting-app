@@ -82,10 +82,10 @@ export function timeAgo(date) {
   return formatDayLabel(date);
 }
 
-// How long someone has been a member: "Joined today", "3 days", "4 months", "2 years"
+// How long someone has been a member: "New" (under a day), "3 days", "4 months", "2 years"
 export function memberDuration(date) {
   const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
-  if (days < 1) return "Joined today";
+  if (days < 1) return "New";
   if (days < 30) return `${days} day${days === 1 ? "" : "s"}`;
   const months = Math.floor(days / 30.44);
   if (months < 12) return `${months} month${months === 1 ? "" : "s"}`;

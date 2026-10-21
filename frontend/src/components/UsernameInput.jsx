@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { normalizeUsername, USERNAME_MAX, validateUsername } from "../lib/validation";
+import { input } from "../lib/ui";
 
 // Username field with a live "available / taken" check and suggestions.
 // Reports its state through onStatusChange: "idle" | "checking" | "available" | "taken" | "invalid"
@@ -57,12 +58,12 @@ const UsernameInput = ({ id = "username", value, onChange, onBlur, name, current
   }, [status, onStatusChange]);
 
   const showError = (status === "taken" || (status === "invalid" && showErrors)) && message;
-  const borderClass = showError ? "border-red-400" : status === "available" ? "border-green-500" : "border-gray-500";
+  const borderClass = showError ? "border-danger" : status === "available" ? "border-online" : "border-line";
 
   return (
     <>
       <div className="relative">
-        <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">@</span>
+        <span className="absolute inset-y-0 left-3 flex items-center text-subtle pointer-events-none">@</span>
         <input
           id={id}
           value={value}
@@ -75,34 +76,34 @@ const UsernameInput = ({ id = "username", value, onChange, onBlur, name, current
           spellCheck={false}
           placeholder="your.username"
           aria-invalid={!!showError}
-          className={`w-full p-2.5 pl-7 pr-9 bg-transparent border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base sm:text-sm ${borderClass}`}
+          className={`${input} pl-7 pr-9 ${borderClass}`}
         />
         <span className="absolute inset-y-0 right-3 flex items-center text-sm" aria-hidden>
           {status === "checking" && (
-            <span className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           )}
-          {status === "available" && <span className="text-green-400">✓</span>}
-          {status === "taken" && <span className="text-red-400">✕</span>}
+          {status === "available" && <span className="text-success-text">✓</span>}
+          {status === "taken" && <span className="text-danger">✕</span>}
         </span>
       </div>
 
       {status === "available" && username !== currentUsername && (
-        <p className="text-xs text-green-400">@{username} is available</p>
+        <p className="text-xs text-success-text">@{username} is available</p>
       )}
       {showError && (
-        <p role="alert" className="text-xs text-red-400">
+        <p role="alert" className="text-xs text-danger">
           {message}
         </p>
       )}
       {suggestions.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
           Try:
           {suggestions.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => onChange(s)}
-              className="px-2 py-0.5 rounded-full bg-white/10 hover:bg-violet-600 text-gray-200 cursor-pointer"
+              className="px-2.5 py-1 rounded-full bg-accent-soft text-accent-text hover:bg-accent hover:text-accent-fg cursor-pointer transition-colors"
             >
               @{s}
             </button>
