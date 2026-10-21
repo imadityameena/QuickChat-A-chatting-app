@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import assets from "../assets/assets";
 import {
   formatDayLabel,
+  formatLastSeen,
   formatMessageTime,
   isSameDay,
   readFileAsDataURL,
@@ -107,7 +108,7 @@ const ChatContainer = () => {
         <div className="flex-1 min-w-0">
           <p className="text-lg text-white truncate leading-6">{selectedUser.fullName}</p>
           <p className={`text-xs ${isTyping ? "text-violet-300" : isOnline ? "text-green-400" : "text-gray-400"}`}>
-            {isTyping ? "typing…" : isOnline ? "Online" : "Offline"}
+            {isTyping ? "typing…" : isOnline ? "Online" : formatLastSeen(selectedUser.lastSeen)}
           </p>
         </div>
       </div>

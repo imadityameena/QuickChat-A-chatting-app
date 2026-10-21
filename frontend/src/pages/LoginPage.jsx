@@ -1,15 +1,23 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
+import { readFileAsDataURL, validateImageFile } from "../lib/utils";
+import UsernameInput from "../components/UsernameInput";
 import {
+  formatName,
   MAX_NAME_LENGTH,
   MAX_PASSWORD_LENGTH,
+  normalizeUsername,
   passwordStrength,
   suggestEmail,
+  usernameFromName,
   validateEmail,
+  validateIdentifier,
   validateName,
   validatePassword,
+  validateUsername,
 } from "../lib/validation";
 
 const inputBase =
@@ -90,7 +98,12 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState("idle");
   const [bio, setBio] = useState("");
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [agreed, setAgreed] = useState(false);
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -100,11 +113,33 @@ const LoginPage = () => {
   const { login } = useContext(AuthContext);
   const isSignup = currState === "Sign up";
 
+  // Preview URL for the chosen profile picture (cleaned up when it changes)
+  useEffect(() => {
+    if (!photo) return setPhotoPreview(null);
+    const url = URL.createObjectURL(photo);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow picking the same file again
+    if (!file) return;
+    const error = validateImageFile(file);
+    if (error) return toast.error(error);
+    setPhoto(file);
+  };
+
   // Errors for the current form. Login only checks that fields are filled
   // and the email looks right; strength rules apply to new passwords only.
   const errors = {
     fullName: isSignup ? validateName(fullName) : "",
-    email: validateEmail(email) || serverEmailError,
+    username: isSignup
+      ? validateUsername(normalizeUsername(username)) ||
+        (usernameStatus === "taken" ? "This username is already taken" : "")
+      : "",
+    // On login this field takes an email or a username
+    email: isSignup ? validateEmail(email) || serverEmailError : validateIdentifier(email),
     password: isSignup ? validatePassword(password) : password ? "" : "Please enter your password",
     confirmPassword:
       isSignup && (!confirmPassword ? "Please confirm your password" : confirmPassword !== password ? "Passwords don't match" : ""),
@@ -130,9 +165,13 @@ const LoginPage = () => {
 
     // Sign up has two steps: details first, then bio
     if (isSignup && !isDataSubmitted) {
-      const fields = ["fullName", "email", "password", "confirmPassword", "agreed"];
+      const fields = ["fullName", "username", "email", "password", "confirmPassword", "agreed"];
       setTouched(Object.fromEntries(fields.map((f) => [f, true])));
       if (fields.some((f) => errors[f])) return;
+      if (usernameStatus === "checking") {
+        toast("Still checking your username, try again in a moment");
+        return;
+      }
 
       // Ask the server whether the email domain is real and not already registered
       setSubmitting(true);
@@ -158,8 +197,23 @@ const LoginPage = () => {
 
     setSubmitting(true);
     const credentials = isSignup
-      ? { fullName: fullName.trim(), email: email.trim(), password, bio: bio.trim() }
-      : { email: email.trim(), password };
+      ? {
+          fullName: formatName(fullName),
+          username: normalizeUsername(username),
+          email: email.trim(),
+          password,
+          bio: bio.trim(),
+        }
+      : { identifier: email.trim(), password };
+    if (isSignup && photo) {
+      try {
+        credentials.profilePic = await readFileAsDataURL(photo);
+      } catch (err) {
+        toast.error(err.message);
+        setSubmitting(false);
+        return;
+      }
+    }
     const ok = await login(isSignup ? "signup" : "login", credentials);
     setSubmitting(false);
 
@@ -179,7 +233,7 @@ const LoginPage = () => {
         {isSignup && isDataSubmitted ? (
           <>
             <h2 className="font-medium text-2xl flex justify-between items-center">
-              Add your bio
+              Almost done
               <button
                 type="button"
                 aria-label="Back"
@@ -190,6 +244,40 @@ const LoginPage = () => {
               </button>
             </h2>
 
+            {/* Optional profile picture */}
+            <div className="flex items-center gap-4">
+              <label htmlFor="signup-photo" className="relative cursor-pointer shrink-0 group" title="Choose a profile picture">
+                <img
+                  src={photoPreview || assets.avatar_icon}
+                  alt="Profile preview"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-500 group-hover:border-violet-400"
+                />
+                <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-violet-600 border-2 border-[#1d1838] flex items-center justify-center text-sm">
+                  {photo ? "✎" : "+"}
+                </span>
+              </label>
+              <input
+                id="signup-photo"
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                onChange={handlePhotoChange}
+                hidden
+              />
+              <div className="text-sm min-w-0">
+                <p className="text-white">Profile picture</p>
+                <p className="text-gray-400 text-xs">Optional · JPG, PNG or WebP up to 5MB</p>
+                {photo && (
+                  <button
+                    type="button"
+                    onClick={() => setPhoto(null)}
+                    className="mt-1 text-xs text-red-300 hover:underline cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+
             <textarea
               onChange={(e) => setBio(e.target.value)}
               value={bio}
@@ -197,7 +285,6 @@ const LoginPage = () => {
               maxLength={200}
               className={`${inputBase} border-gray-500`}
               placeholder="Provide a short bio... (optional)"
-              autoFocus
             />
             <p className="-mt-3 text-right text-xs text-gray-400">{bio.length}/200</p>
 
@@ -219,7 +306,12 @@ const LoginPage = () => {
                 <input
                   id="fullName"
                   onChange={(e) => setFullName(e.target.value)}
-                  onBlur={() => touch("fullName")}
+                  onBlur={() => {
+                    setFullName((n) => formatName(n));
+                    // Suggest a username from the name until the user types their own
+                    if (!usernameEdited) setUsername(usernameFromName(fullName));
+                    touch("fullName");
+                  }}
                   value={fullName}
                   type="text"
                   maxLength={MAX_NAME_LENGTH}
@@ -231,7 +323,27 @@ const LoginPage = () => {
               </Field>
             )}
 
-            <Field label="Email" id="email" error={showError("email")}>
+            {isSignup && (
+              <Field
+                label="Username"
+                id="username"
+                error={touched.username && !username ? errors.username : ""}
+              >
+                <UsernameInput
+                  value={username}
+                  onChange={(v) => {
+                    setUsername(v);
+                    setUsernameEdited(true);
+                  }}
+                  onBlur={() => touch("username")}
+                  name={fullName}
+                  showErrors={!!touched.username}
+                  onStatusChange={setUsernameStatus}
+                />
+              </Field>
+            )}
+
+            <Field label={isSignup ? "Email" : "Email or username"} id="email" error={showError("email")}>
               <input
                 id="email"
                 onChange={(e) => {
@@ -240,12 +352,12 @@ const LoginPage = () => {
                 }}
                 onBlur={() => touch("email")}
                 value={email}
-                type="email"
-                inputMode="email"
-                autoComplete="email"
+                type={isSignup ? "email" : "text"}
+                inputMode={isSignup ? "email" : "text"}
+                autoComplete={isSignup ? "email" : "username"}
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder="you@example.com"
+                placeholder={isSignup ? "you@example.com" : "you@example.com or your.username"}
                 aria-invalid={!!showError("email")}
                 className={`${inputBase} ${showError("email") ? "border-red-400" : "border-gray-500"}`}
               />

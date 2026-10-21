@@ -89,3 +89,65 @@ export function suggestEmail(email) {
   }
   return best ? `${local}@${best}` : "";
 }
+
+// Put a name in standard form: "  aditya   MEENA " -> "Aditya Meena".
+// Handles hyphens and apostrophes ("mary-jane o'brien" -> "Mary-Jane O'Brien")
+// and leaves deliberate mixed case alone ("McDonald" stays "McDonald").
+export function formatName(name) {
+  return String(name ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) =>
+      word
+        .split(/([-'’])/)
+        .map((part) => {
+          if (!part || /^[-'’]$/.test(part)) return part;
+          const mixedCase = part !== part.toLowerCase() && part !== part.toUpperCase();
+          const base = mixedCase ? part : part.toLowerCase();
+          return base.charAt(0).toLocaleUpperCase() + base.slice(1);
+        })
+        .join("")
+    )
+    .join(" ");
+}
+
+// Usernames (same rules as backend/lib/validation.js)
+export const USERNAME_MIN = 3;
+export const USERNAME_MAX = 20;
+const USERNAME_REGEX = /^(?![.])(?!.*\.\.)[a-z0-9._]+(?<![.])$/;
+
+export const normalizeUsername = (username) =>
+  String(username ?? "").trim().replace(/^@/, "").toLowerCase();
+
+export function validateUsername(username) {
+  if (!username) return "Please choose a username";
+  if (username.length < USERNAME_MIN || username.length > USERNAME_MAX)
+    return `Username must be ${USERNAME_MIN}–${USERNAME_MAX} characters`;
+  if (!USERNAME_REGEX.test(username))
+    return "Only lowercase letters, numbers, dots and underscores (no dot at the start or end)";
+  return "";
+}
+
+// "Aditya Meena" -> "aditya.meena"
+export function usernameFromName(name) {
+  return String(name ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9._]/g, "")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .slice(0, USERNAME_MAX)
+    .replace(/\.+$/, "");
+}
+
+// Login accepts an email or a username
+export function validateIdentifier(value) {
+  const v = value.trim();
+  if (!v) return "Please enter your email or username";
+  if (v.includes("@") && !v.startsWith("@")) return validateEmail(v);
+  return validateUsername(normalizeUsername(v)) ? "Please enter a valid username" : "";
+}

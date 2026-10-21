@@ -15,6 +15,25 @@ const toPreview = (message) => ({
   createdAt: message.createdAt,
 });
 
+// Desktop notification for a new message while the tab is in the background
+const showNotification = (sender, message) => {
+  if (!document.hidden || typeof Notification === "undefined") return;
+  if (Notification.permission !== "granted") return;
+  try {
+    const n = new Notification(sender?.fullName || "New message", {
+      body: message.text || "📷 Photo",
+      icon: sender?.profilePic || "/favicon.svg",
+      tag: `quickchat-${message.senderId}`, // replace older notifications from the same person
+    });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
+  } catch {
+    // some mobile browsers only allow notifications from a service worker
+  }
+};
+
 export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -137,12 +156,24 @@ export const ChatProvider = ({ children }) => {
     }
   }, [authUser?._id, getUsers]);
 
-  // Refresh the list when someone we don't know yet comes online (new sign-up)
+  // When a friend goes offline, update their "last seen" time locally
+  const prevOnline = useRef([]);
   useEffect(() => {
-    if (!authUser?._id || usersRef.current.length === 0) return;
-    const known = new Set(usersRef.current.map((u) => u._id));
-    if (onlineUsers.some((id) => id !== authUser._id && !known.has(id))) getUsers();
-  }, [onlineUsers, authUser?._id, getUsers]);
+    const nowOnline = new Set(onlineUsers);
+    const wentOffline = prevOnline.current.filter((id) => !nowOnline.has(id));
+    prevOnline.current = onlineUsers;
+    if (wentOffline.length === 0) return;
+    const now = new Date().toISOString();
+    const update = (u) => (wentOffline.includes(u._id) ? { ...u, lastSeen: now } : u);
+    setUsers((prev) => prev.map(update));
+    setSelectedUser((prev) => (prev ? update(prev) : prev));
+  }, [onlineUsers]);
+
+  // Show the unread count in the browser tab title
+  useEffect(() => {
+    const total = Object.values(unseenMessages).reduce((sum, n) => sum + n, 0);
+    document.title = total > 0 ? `(${total > 99 ? "99+" : total}) QuickChat` : "QuickChat";
+  }, [unseenMessages]);
 
   // Fetch messages whenever the selected chat changes
   useEffect(() => {
@@ -156,6 +187,8 @@ export const ChatProvider = ({ children }) => {
     const handleNewMessage = (message) => {
       const fromId = message.senderId;
       clearTyping(fromId);
+
+      showNotification(usersRef.current.find((u) => u._id === fromId), message);
 
       if (selectedUserRef.current?._id === fromId) {
         setMessages((prev) => [...prev, { ...message, seen: true }]);
@@ -189,13 +222,25 @@ export const ChatProvider = ({ children }) => {
       typingTimers.current[from] = setTimeout(() => clearTyping(from), TYPING_TIMEOUT);
     };
 
+    // A friend removed us: drop them from the list and close their chat
+    const handleFriendRemoved = ({ userId }) => {
+      setUsers((prev) => prev.filter((u) => u._id !== userId));
+      setUnseenMessages((prev) => ({ ...prev, [userId]: 0 }));
+      if (selectedUserRef.current?._id === userId) {
+        setSelectedUser(null);
+        setMessages([]);
+      }
+    };
+
     socket.on("newMessage", handleNewMessage);
+    socket.on("friendRemoved", handleFriendRemoved);
     socket.on("messageSent", handleMessageSent);
     socket.on("messagesSeen", handleMessagesSeen);
     socket.on("typing", handleTyping);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("friendRemoved", handleFriendRemoved);
       socket.off("messageSent", handleMessageSent);
       socket.off("messagesSeen", handleMessagesSeen);
       socket.off("typing", handleTyping);

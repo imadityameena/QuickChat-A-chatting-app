@@ -54,3 +54,17 @@ export function validateImageFile(file) {
   if (file.size > MAX_IMAGE_SIZE) return "Image must be smaller than 5MB";
   return null;
 }
+
+// "last seen just now", "last seen 5 min ago", "last seen today at 14:05", "last seen Mon, 3 Mar"
+export function formatLastSeen(date) {
+  if (!date) return "Offline";
+  const d = new Date(date);
+  const minutes = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (minutes < 1) return "Last seen just now";
+  if (minutes < 60) return `Last seen ${minutes} min ago`;
+  const day = formatDayLabel(d);
+  if (day === "Today" || day === "Yesterday") {
+    return `Last seen ${day.toLowerCase()} at ${formatMessageTime(d)}`;
+  }
+  return `Last seen ${day}`;
+}

@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
 import { readFileAsDataURL, validateImageFile } from "../lib/utils";
+import { formatName, normalizeUsername } from "../lib/validation";
+import UsernameInput from "../components/UsernameInput";
 
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
@@ -13,6 +15,8 @@ const ProfilePage = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [name, setName] = useState(authUser.fullName);
   const [bio, setBio] = useState(authUser.bio || "");
+  const [username, setUsername] = useState(authUser.username || "");
+  const [usernameStatus, setUsernameStatus] = useState("idle");
   const [saving, setSaving] = useState(false);
 
   // Create (and clean up) a preview URL for the chosen image
@@ -37,9 +41,17 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (usernameStatus === "taken" || usernameStatus === "invalid" || !username) {
+      toast.error("Please choose a valid, available username");
+      return;
+    }
+    if (usernameStatus === "checking") {
+      toast("Still checking your username, try again in a moment");
+      return;
+    }
     setSaving(true);
     try {
-      const body = { fullName: name.trim(), bio: bio.trim() };
+      const body = { fullName: formatName(name), bio: bio.trim(), username: normalizeUsername(username) };
       if (selectedImg) body.profilePic = await readFileAsDataURL(selectedImg);
       if (await updateProfile(body)) navigate("/");
     } catch (err) {
@@ -83,6 +95,7 @@ const ProfilePage = () => {
 
           <input
             onChange={(e) => setName(e.target.value)}
+            onBlur={() => setName((n) => formatName(n))}
             value={name}
             type="text"
             required
@@ -90,6 +103,18 @@ const ProfilePage = () => {
             placeholder="Your name"
             className="p-2 bg-transparent border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
           />
+
+          <div className="flex flex-col gap-1">
+            <UsernameInput
+              id="profile-username"
+              value={username}
+              onChange={setUsername}
+              name={name}
+              currentUsername={authUser.username}
+              showErrors
+              onStatusChange={setUsernameStatus}
+            />
+          </div>
 
           <textarea
             onChange={(e) => setBio(e.target.value)}
