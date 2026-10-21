@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "server": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "migrate:friends": "node scripts/migrateFriends.js",
+    "migrate:names": "node scripts/formatNames.js",
+    "migrate:usernames": "node scripts/addUsernames.js",
+    "migrate": "npm run migrate:friends && npm run migrate:names && npm run migrate:usernames"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import User from "../models/user.model.js";
 
 let io;
 
@@ -44,7 +45,11 @@ export const initSocket = (server, corsOrigin) => {
     socket.on("disconnect", () => {
       const count = (onlineUsers.get(userId) || 1) - 1;
       if (count > 0) onlineUsers.set(userId, count);
-      else onlineUsers.delete(userId);
+      else {
+        onlineUsers.delete(userId);
+        // Remember when they were last online, shown as "Last seen …"
+        User.updateOne({ _id: userId }, { lastSeen: new Date() }).catch(() => {});
+      }
       broadcastOnlineUsers();
     });
   });

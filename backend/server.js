@@ -6,6 +6,7 @@ import { connectDB } from "./lib/db.js";
 import { initSocket } from "./lib/socket.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
+import friendRouter from "./routes/friendRoutes.js";
 
 // Fail fast if required configuration is missing
 const missingEnv = ["MONGODB_URI", "JWT_SECRET"].filter((key) => !process.env[key]);
@@ -25,6 +26,7 @@ const server = http.createServer(app);
 initSocket(server, corsOrigin);
 
 // Middleware
+app.set("trust proxy", 1); // real client IPs behind Vercel / proxies (used by the rate limiter)
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: "8mb" })); // room for base64 images up to ~5MB
 
@@ -32,6 +34,7 @@ app.use(express.json({ limit: "8mb" })); // room for base64 images up to ~5MB
 app.get("/api/status", (req, res) => res.send("server is live"));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
+app.use("/api/friends", friendRouter);
 
 // 404 for unknown routes
 app.use((req, res) => {

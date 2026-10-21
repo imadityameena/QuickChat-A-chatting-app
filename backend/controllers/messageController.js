@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Message from "../models/message.model.js";
-import User from "../models/user.model.js";
+import User, { PUBLIC_USER_FIELDS } from "../models/user.model.js";
 import { uploadImage } from "../lib/cloudinary.js";
 import { isDataUrlImage } from "../lib/utils.js";
 import { emitToUser } from "../lib/socket.js";
@@ -8,15 +8,15 @@ import { emitToUser } from "../lib/socket.js";
 const invalidId = (res) =>
   res.status(400).json({ success: false, message: "Invalid user id" });
 
-// Get all users except the logged-in one, with unread counts and the
-// last message of each conversation (most recent conversations first)
+// Get my friends, with unread counts and the last message of each
+// conversation (most recent conversations first)
 export const getUsersForSidebar = async (req, res) => {
   const myId = req.user._id;
 
   const [users, unseenCounts, lastMessages] = await Promise.all([
-    User.find({ _id: { $ne: myId } }).lean(),
+    User.find({ _id: { $in: req.user.friends } }).select(PUBLIC_USER_FIELDS).lean(),
     Message.aggregate([
-      { $match: { receiverId: myId, seen: false } },
+      { $match: { receiverId: myId, seen: false, senderId: { $in: req.user.friends } } },
       { $group: { _id: "$senderId", count: { $sum: 1 } } },
     ]),
     Message.aggregate([
@@ -113,8 +113,10 @@ export const sendMessage = async (req, res) => {
   if (image && !isDataUrlImage(image)) {
     return res.status(400).json({ success: false, message: "Unsupported image format" });
   }
-  if (!(await User.exists({ _id: receiverId }))) {
-    return res.status(404).json({ success: false, message: "User not found" });
+  if (!req.user.friends.some((id) => id.equals(receiverId))) {
+    return res
+      .status(403)
+      .json({ success: false, message: "You can only message your friends" });
   }
 
   const imageUrl = image ? await uploadImage(image, "messages") : undefined;
