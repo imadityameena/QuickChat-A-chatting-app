@@ -5,6 +5,7 @@ import RightSidebar from "../components/RightSidebar";
 import DiscoverView from "../components/DiscoverView";
 import RequestsView from "../components/RequestsView";
 import ProfileModal from "../components/ProfileModal";
+import ReportModal from "../components/ReportModal";
 import { ChatContext } from "../../context/ChatContext";
 
 const HomePage = () => {
@@ -32,6 +33,7 @@ const HomePage = () => {
         )}
       </div>
       <ProfileModal />
+      <ReportModal />
     </div>
   );
 };

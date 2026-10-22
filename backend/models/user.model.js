@@ -44,6 +44,8 @@ const userSchema = new mongoose.Schema(
     },
     // Accepted friends: only these people show up in the chat list
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    // People this user has blocked (private)
+    blocked: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     lastSeen: {
       type: Date,
       default: Date.now,
@@ -56,6 +58,7 @@ const userSchema = new mongoose.Schema(
       transform: (_doc, ret) => {
         delete ret.password;
         delete ret.friends; // a user's friend list is private
+        delete ret.blocked;
         return ret;
       },
     },

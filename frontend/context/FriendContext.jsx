@@ -18,6 +18,7 @@ export const FriendProvider = ({ children }) => {
   const [busy, setBusy] = useState({}); // userId -> true while a request is in flight
   const [profileUserId, setProfileUserId] = useState(null); // whose profile popup is open
   const [friendsVersion, setFriendsVersion] = useState(0); // bumps on any friend change, so open profiles refresh
+  const [reportTarget, setReportTarget] = useState(null); // user being reported (report popup open)
 
   const discoverQuery = useRef("");
 
@@ -183,6 +184,42 @@ export const FriendProvider = ({ children }) => {
     };
   }, [socket, getUsers, setDiscoverStatus]);
 
+  // Clear someone from every list on this screen after blocking them
+  const forgetUser = (userId) => {
+    if (selectedUser?._id === userId) selectUser(null);
+    setIncoming((prev) => prev.filter((r) => r.user._id !== userId));
+    setOutgoing((prev) => prev.filter((r) => r.user._id !== userId));
+    setDiscoverUsers((prev) => prev.filter((u) => u._id !== userId));
+    getUsers();
+  };
+
+  const blockUser = (user) =>
+    withBusy(user._id, async () => {
+      await axios.post(`/api/friends/block/${user._id}`);
+      forgetUser(user._id);
+      toast.success(`You blocked ${user.fullName}`);
+      return true;
+    });
+
+  const unblockUser = (user) =>
+    withBusy(user._id, async () => {
+      await axios.delete(`/api/friends/block/${user._id}`);
+      toast.success(`You unblocked ${user.fullName}`);
+      return true;
+    });
+
+  // report = { reason, details, block }
+  const reportUser = (user, report) =>
+    withBusy(user._id, async () => {
+      const { data } = await axios.post(`/api/friends/report/${user._id}`, report);
+      if (data.blocked) forgetUser(user._id);
+      toast.success(data.message);
+      return true;
+    });
+
+  const openReport = useCallback((user) => setReportTarget(user), []);
+  const closeReport = useCallback(() => setReportTarget(null), []);
+
   const openProfile = useCallback((userOrId) => {
     setProfileUserId(typeof userOrId === "string" ? userOrId : userOrId?._id ?? null);
   }, []);
@@ -205,6 +242,12 @@ export const FriendProvider = ({ children }) => {
     declineRequest,
     cancelRequest,
     removeFriend,
+    blockUser,
+    unblockUser,
+    reportUser,
+    reportTarget,
+    openReport,
+    closeReport,
   };
 
   return <FriendContext.Provider value={value}>{children}</FriendContext.Provider>;

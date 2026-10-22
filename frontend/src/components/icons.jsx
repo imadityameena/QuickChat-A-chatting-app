@@ -174,3 +174,16 @@ export const FileTextIcon = (p) => (
     <path d="M14 3v5h5M9 13h6M9 17h6" />
   </Icon>
 );
+
+export const FlagIcon = (p) => (
+  <Icon {...p}>
+    <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+  </Icon>
+);
+
+export const BanIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m5.6 5.6 12.8 12.8" />
+  </Icon>
+);

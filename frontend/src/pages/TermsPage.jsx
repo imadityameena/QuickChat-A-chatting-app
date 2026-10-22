@@ -53,7 +53,19 @@ const TermsPage = () => (
       />
     </Section>
 
-    <Section title="5. Your content">
+    <Section title="5. Blocking and reporting">
+      <p>
+        You can block anyone from their profile. Blocking removes them from your friends, cancels pending friend
+        requests between you, and stops them from finding you, seeing your profile or sending you new requests.
+        You can unblock people from Edit profile.
+      </p>
+      <p>
+        If someone breaks these Terms, please report them from their profile. Reports are confidential. We review
+        them and may warn, restrict or remove accounts. Please don't send false or abusive reports.
+      </p>
+    </Section>
+
+    <Section title="6. Your content">
       <p>
         You keep ownership of the messages, photos and other content you share ("Your Content"). By sharing it,
         you give us a worldwide, non-exclusive, royalty-free licence to store, process, transmit and display Your
@@ -66,7 +78,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="6. Friend requests and messaging">
+    <Section title="7. Friend requests and messaging">
       <p>
         You can only chat with people who have accepted your friend request. Other users may decline your
         requests or remove you as a friend at any time. Please respect people's choices and do not try to contact
@@ -74,7 +86,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="7. Suspension and termination">
+    <Section title="8. Suspension and termination">
       <p>
         You may stop using the Service at any time and can delete your account from Edit profile, or by
         contacting {mail}.
@@ -84,7 +96,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="8. Our intellectual property">
+    <Section title="9. Our intellectual property">
       <p>
         The Service, including its design, logo, software and features, belongs to {appName} and its licensors and
         is protected by intellectual property laws. These Terms do not give you any right to use our name, logo or
@@ -92,7 +104,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="9. Availability and changes to the Service">
+    <Section title="10. Availability and changes to the Service">
       <p>
         We work to keep the Service running smoothly, but we do not promise it will always be available, error
         free or secure. We may change, suspend or discontinue any part of the Service at any time. Messages and
@@ -100,7 +112,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="10. Disclaimer of warranties">
+    <Section title="11. Disclaimer of warranties">
       <p>
         The Service is provided "as is" and "as available", without warranties of any kind, whether express or
         implied, including warranties of merchantability, fitness for a particular purpose and non-infringement,
@@ -109,7 +121,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="11. Limitation of liability">
+    <Section title="12. Limitation of liability">
       <p>
         To the fullest extent permitted by law, {appName} and its team will not be liable for any indirect,
         incidental, special, consequential or punitive damages, or any loss of data, profits or goodwill, arising
@@ -118,7 +130,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="12. Indemnity">
+    <Section title="13. Indemnity">
       <p>
         You agree to defend and hold harmless {appName} and its team from any claims, damages or expenses
         (including reasonable legal fees) arising from Your Content, your use of the Service, or your breach of
@@ -126,7 +138,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="13. Changes to these Terms">
+    <Section title="14. Changes to these Terms">
       <p>
         We may update these Terms from time to time. When we do, we will change the "Last updated" date above,
         and for significant changes we may also notify you in the app. Continuing to use the Service after an
@@ -134,7 +146,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="14. Governing law">
+    <Section title="15. Governing law">
       <p>
         These Terms are governed by the laws of the country in which {appName} is operated, without regard to its
         conflict of law rules. Any disputes will be handled by the courts of that jurisdiction, unless the law
@@ -142,7 +154,7 @@ const TermsPage = () => (
       </p>
     </Section>
 
-    <Section title="15. Contact us">
+    <Section title="16. Contact us">
       <p>If you have questions about these Terms, contact us at {mail}.</p>
     </Section>
   </LegalLayout>

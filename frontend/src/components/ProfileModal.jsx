@@ -6,7 +6,7 @@ import { ChatContext } from "../../context/ChatContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen, formatMonthYear, getErrorMessage, memberDuration } from "../lib/utils";
 import { cardButton } from "../lib/ui";
-import { ChatIcon, CheckIcon, ClockIcon, UserPlusIcon, XIcon } from "./icons";
+import { BanIcon, ChatIcon, CheckIcon, ClockIcon, FlagIcon, UserPlusIcon, XIcon } from "./icons";
 import { avatarSrc } from "../lib/images";
 
 const Stat = ({ value, label }) => (
@@ -30,6 +30,9 @@ const ProfileModal = () => {
     declineRequest,
     cancelRequest,
     removeFriend,
+    blockUser,
+    unblockUser,
+    openReport,
   } = useContext(FriendContext);
   const navigate = useNavigate();
   const closeRef = useRef(null);
@@ -83,8 +86,25 @@ const ProfileModal = () => {
     closeProfile();
   };
 
+  const block = async () => {
+    if (
+      window.confirm(
+        `Block ${profile.fullName}? They'll be removed from your friends and won't be able to find you, see your profile or send you friend requests. They won't be told.`
+      ) &&
+      (await blockUser(profile))
+    ) {
+      closeProfile();
+    }
+  };
+
   const actions = () => {
     switch (profile.relationship) {
+      case "blocked":
+        return (
+          <button type="button" disabled={isBusy} onClick={() => unblockUser(profile)} className={cardButton.ghost}>
+            Unblock
+          </button>
+        );
       case "self":
         return (
           <button type="button" onClick={() => { closeProfile(); navigate("/profile"); }} className={cardButton.primary}>
@@ -194,7 +214,7 @@ const ProfileModal = () => {
 
             <div className="mt-5 w-full flex divide-x divide-line rounded-xl bg-surface-2 border border-line py-3">
               <Stat value={profile.friendCount} label={profile.friendCount === 1 ? "Friend" : "Friends"} />
-              {profile.relationship !== "self" && <Stat value={profile.mutualCount} label="Mutual" />}
+              {!["self", "blocked"].includes(profile.relationship) && <Stat value={profile.mutualCount} label="Mutual" />}
               <Stat value={memberDuration(profile.createdAt)} label="On QuickChat" />
             </div>
             <p className="mt-2 text-xs text-subtle">Joined {formatMonthYear(profile.createdAt)}</p>
@@ -219,7 +239,34 @@ const ProfileModal = () => {
               </div>
             )}
 
+            {profile.relationship === "blocked" && (
+              <p className="mt-5 text-sm text-danger">You've blocked this person.</p>
+            )}
+
             <div className="mt-6 w-full flex gap-2">{actions()}</div>
+
+            {profile.relationship !== "self" && (
+              <div className="mt-4 flex items-center justify-center gap-5 text-sm">
+                {profile.relationship !== "blocked" && (
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={block}
+                    className="inline-flex items-center gap-1.5 text-muted hover:text-danger cursor-pointer disabled:opacity-50"
+                  >
+                    <BanIcon /> Block
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => openReport(profile)}
+                  className="inline-flex items-center gap-1.5 text-muted hover:text-danger cursor-pointer disabled:opacity-50"
+                >
+                  <FlagIcon /> Report
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

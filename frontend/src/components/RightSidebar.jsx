@@ -4,13 +4,14 @@ import { AuthContext } from "../../context/AuthContext";
 import { FriendContext } from "../../context/FriendContext";
 import { formatLastSeen } from "../lib/utils";
 import { button } from "../lib/ui";
+import { BanIcon, FlagIcon } from "./icons";
 import { avatarSrc, imageSrc } from "../lib/images";
 
 // Details about the person in the open chat (large screens only)
 const RightSidebar = () => {
   const { selectedUser, messages } = useContext(ChatContext);
   const { onlineUsers } = useContext(AuthContext);
-  const { removeFriend, busy, openProfile } = useContext(FriendContext);
+  const { removeFriend, blockUser, openReport, busy, openProfile } = useContext(FriendContext);
 
   // All images shared in this conversation, newest first
   const msgImages = useMemo(
@@ -71,7 +72,7 @@ const RightSidebar = () => {
         )}
       </div>
 
-      <div className="border-t border-line p-4">
+      <div className="border-t border-line p-4 flex flex-col gap-1">
         <button
           type="button"
           disabled={!!busy[selectedUser._id]}
@@ -88,6 +89,32 @@ const RightSidebar = () => {
         >
           Remove friend
         </button>
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            disabled={!!busy[selectedUser._id]}
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Block ${selectedUser.fullName}? They'll be removed from your friends and won't be able to find you, see your profile or send you friend requests. They won't be told.`
+                )
+              ) {
+                blockUser(selectedUser);
+              }
+            }}
+            className={button.danger}
+          >
+            <BanIcon /> Block
+          </button>
+          <button
+            type="button"
+            disabled={!!busy[selectedUser._id]}
+            onClick={() => openReport(selectedUser)}
+            className={button.danger}
+          >
+            <FlagIcon /> Report
+          </button>
+        </div>
       </div>
     </aside>
   );

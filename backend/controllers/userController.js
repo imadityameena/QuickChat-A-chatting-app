@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import FriendRequest from "../models/friendRequest.model.js";
+import Report from "../models/report.model.js";
 import { generateToken, isDataUrlImage } from "../lib/utils.js";
 import { deleteImages, uploadImage } from "../lib/cloudinary.js";
 import { disconnectUser, emitToUser } from "../lib/socket.js";
@@ -252,6 +253,8 @@ export const deleteAccount = async (req, res) => {
     Message.deleteMany(inMyChats),
     FriendRequest.deleteMany({ $or: [{ from: myId }, { to: myId }] }),
     User.updateMany({ friends: myId }, { $pull: { friends: myId } }),
+    User.updateMany({ blocked: myId }, { $pull: { blocked: myId } }),
+    Report.deleteMany({ $or: [{ reporter: myId }, { reported: myId }] }),
   ]);
   await User.deleteOne({ _id: myId });
 

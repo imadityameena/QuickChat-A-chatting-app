@@ -7,6 +7,7 @@ import { readFileAsDataURL, validateImageFile } from "../lib/utils";
 import { formatName, normalizeUsername } from "../lib/validation";
 import UsernameInput from "../components/UsernameInput";
 import DeleteAccountModal from "../components/DeleteAccountModal";
+import BlockedUsers from "../components/BlockedUsers";
 import { ArrowLeftIcon, CameraIcon, TrashIcon } from "../components/icons";
 import { button, formButton, input } from "../lib/ui";
 import { avatarSrc } from "../lib/images";
@@ -167,7 +168,11 @@ const ProfilePage = () => {
             {saving ? "Saving…" : "Save"}
           </button>
 
-          <div className="mt-4 pt-5 border-t border-line flex flex-col gap-2">
+          <div className="mt-4 pt-5 border-t border-line">
+            <BlockedUsers />
+          </div>
+
+          <div className="pt-5 border-t border-line flex flex-col gap-2">
             <p className="text-sm font-medium text-danger">Delete account</p>
             <p className="text-xs text-muted">
               Permanently delete your account, chats and photos. This can't be undone.

@@ -23,7 +23,8 @@ const PrivacyPage = () => (
           "Account details: your full name, username, email address and password. Passwords are stored only as a secure one-way hash; we never store or see your plain-text password.",
           "Profile details: your profile picture and bio, if you choose to add them.",
           "Content: messages, photos and other content you send through the Service.",
-          "Connections: friend requests you send, receive, accept or decline, and your friends list.",
+          "Connections: friend requests you send, receive, accept or decline, your friends list, and people you block.",
+          "Reports: if you report someone, the reason and any details you give. The person you report is not told who reported them.",
           "Communications: anything you send us when you contact support.",
         ]}
       />
@@ -44,7 +45,7 @@ const PrivacyPage = () => (
           "To deliver messages and photos to the people you chat with, in real time.",
           "To show your public profile (name, username, picture, bio and last seen) so other users can find you and send friend requests.",
           "To send browser notifications for new messages, if you allow them.",
-          "To keep the Service secure, prevent spam and abuse, and enforce our Terms of Service.",
+          "To keep the Service secure, prevent spam and abuse, review reports, and enforce our Terms of Service.",
           "To fix problems and improve the Service.",
           "To comply with legal obligations.",
         ]}
@@ -55,7 +56,7 @@ const PrivacyPage = () => (
     <Section title="4. Who can see your information">
       <List
         items={[
-          "Other users: your name, username, profile picture, bio and last-seen time are visible to other users. Your email address and friends list are not shown to them.",
+          "Other users: your name, username, profile picture, bio and last-seen time are visible to other users. Your email address, friends list and blocked list are not shown to them. People you block can't find you or see your profile.",
           "People you chat with: messages and photos you send are visible to the recipient.",
           "Service providers: we use trusted providers to run the Service, including database hosting, image storage and delivery, and web hosting. They process data only on our behalf and under appropriate confidentiality and security obligations.",
           "Legal reasons: we may disclose information if required by law, or if we believe it is necessary to protect the rights, property or safety of our users, the public or us.",
