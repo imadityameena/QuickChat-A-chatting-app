@@ -70,6 +70,11 @@ export const AuthProvider = ({ children }) => {
 
     const newSocket = io(backendUrl, { auth: { token } });
     newSocket.on("getOnlineUsers", (userIds) => setOnlineUsers(userIds));
+    // The account was deleted (here or in another tab): log out everywhere
+    newSocket.on("accountDeleted", () => {
+      clearSession();
+      toast.success("Your account has been deleted", { id: "account-deleted" });
+    });
     setSocket(newSocket);
 
     return () => {
@@ -77,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       setSocket(null);
       setOnlineUsers([]);
     };
-  }, [authUser?._id, token]);
+  }, [authUser?._id, token, clearSession]);
 
   // Log in or sign up. Returns true on success.
   const login = async (state, credentials) => {
@@ -121,6 +126,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Permanently delete the account. Returns { ok, message }.
+  const deleteAccount = async (password) => {
+    try {
+      const { data } = await axios.delete("/api/auth/account", { data: { password } });
+      if (!data.success) return { ok: false, message: data.message };
+      clearSession();
+      toast.success("Your account has been deleted", { id: "account-deleted" });
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, message: getErrorMessage(error) };
+    }
+  };
+
   const value = {
     axios,
     authUser,
@@ -129,6 +147,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     socket,
     updateProfile,
+    deleteAccount,
     onlineUsers,
   };
 

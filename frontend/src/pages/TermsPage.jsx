@@ -76,7 +76,8 @@ const TermsPage = () => (
 
     <Section title="7. Suspension and termination">
       <p>
-        You may stop using the Service at any time and may ask us to delete your account by contacting {mail}.
+        You may stop using the Service at any time and can delete your account from Edit profile, or by
+        contacting {mail}.
         We may suspend or terminate your account, with or without notice, if you break these Terms, if required
         by law, or to protect the Service or other users. Sections that by their nature should survive
         termination (such as ownership, disclaimers and limitation of liability) will continue to apply.

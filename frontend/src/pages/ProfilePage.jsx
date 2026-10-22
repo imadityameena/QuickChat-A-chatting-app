@@ -6,6 +6,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { readFileAsDataURL, validateImageFile } from "../lib/utils";
 import { formatName, normalizeUsername } from "../lib/validation";
 import UsernameInput from "../components/UsernameInput";
+import DeleteAccountModal from "../components/DeleteAccountModal";
 import { ArrowLeftIcon, CameraIcon, TrashIcon } from "../components/icons";
 import { button, formButton, input } from "../lib/ui";
 import { avatarSrc } from "../lib/images";
@@ -22,6 +23,7 @@ const ProfilePage = () => {
   const [username, setUsername] = useState(authUser.username || "");
   const [usernameStatus, setUsernameStatus] = useState("idle");
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Create (and clean up) a preview URL for the chosen image
   useEffect(() => {
@@ -164,6 +166,17 @@ const ProfilePage = () => {
           >
             {saving ? "Saving…" : "Save"}
           </button>
+
+          <div className="mt-4 pt-5 border-t border-line flex flex-col gap-2">
+            <p className="text-sm font-medium text-danger">Delete account</p>
+            <p className="text-xs text-muted">
+              Permanently delete your account, chats and photos. This can't be undone.
+            </p>
+            <button type="button" onClick={() => setDeleteOpen(true)} className={`${button.ghost} w-fit`}>
+              <TrashIcon className="w-4 h-4" />
+              Delete my account
+            </button>
+          </div>
         </form>
 
         {/* Big avatar: click it to pick a new photo */}
@@ -186,6 +199,7 @@ const ProfilePage = () => {
           </span>
         </label>
       </div>
+      <DeleteAccountModal open={deleteOpen} onClose={() => setDeleteOpen(false)} />
     </div>
   );
 };

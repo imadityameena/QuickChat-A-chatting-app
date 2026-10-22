@@ -57,6 +57,13 @@ export const initSocket = (server, corsOrigin) => {
   return io;
 };
 
+// Tell all of a user's tabs they were logged out, then close their connections
+export const disconnectUser = (userId, event, payload) => {
+  if (!io) return;
+  io.to(String(userId)).emit(event, payload);
+  io.in(String(userId)).disconnectSockets(true);
+};
+
 // Send an event to every connected socket of a user
 export const emitToUser = (userId, event, payload) => {
   io?.to(String(userId)).emit(event, payload);

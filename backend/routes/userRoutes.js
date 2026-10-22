@@ -1,5 +1,13 @@
 import express from "express";
-import { checkAuth, checkEmail, checkUsername, login, signup, updateProfile } from "../controllers/userController.js";
+import {
+  checkAuth,
+  checkEmail,
+  checkUsername,
+  deleteAccount,
+  login,
+  signup,
+  updateProfile,
+} from "../controllers/userController.js";
 import { protectRoute } from "../middlewares/auth.middleware.js";
 import { rateLimit } from "../lib/rateLimit.js";
 
@@ -30,6 +38,14 @@ const usernameLimiter = rateLimit({
   message: "Too many checks. Please slow down.",
 });
 
+// Password re-checks before deleting an account: 5 tries per user every 15 minutes
+const deleteAccountLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  max: 5,
+  key: (req) => String(req.user._id),
+  message: "Too many attempts. Please try again in 15 minutes.",
+});
+
 const userRouter = express.Router();
 
 userRouter.post("/signup", signupLimiter, signup);
@@ -38,5 +54,6 @@ userRouter.post("/check-email", signupLimiter, checkEmail);
 userRouter.get("/check-username", usernameLimiter, checkUsername);
 userRouter.put("/update-profile", protectRoute, updateProfile);
 userRouter.get("/check", protectRoute, checkAuth);
+userRouter.delete("/account", protectRoute, deleteAccountLimiter, deleteAccount);
 
 export default userRouter;

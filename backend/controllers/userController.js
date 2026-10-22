@@ -1,7 +1,10 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
+import FriendRequest from "../models/friendRequest.model.js";
 import { generateToken, isDataUrlImage } from "../lib/utils.js";
-import { uploadImage } from "../lib/cloudinary.js";
+import { deleteImages, uploadImage } from "../lib/cloudinary.js";
+import { disconnectUser, emitToUser } from "../lib/socket.js";
 
 import {
   MAX_NAME_LENGTH,
@@ -221,4 +224,45 @@ export const updateProfile = async (req, res) => {
   }
 
   res.json({ success: true, user: updatedUser, message: "Profile updated successfully" });
+};
+
+// Permanently delete the logged-in user's account and everything tied to it:
+// their conversations (both sides), photos, friend requests and friendships.
+// The password is asked again so a borrowed, logged-in device can't do this.
+export const deleteAccount = async (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ success: false, message: "Please enter your password" });
+  }
+
+  const me = await User.findById(req.user._id).select("+password");
+  // 400, not 401: the app treats any 401 as "session expired" and logs you out
+  if (!me || !(await bcrypt.compare(String(password), me.password))) {
+    return res.status(400).json({ success: false, message: "Incorrect password" });
+  }
+
+  const myId = me._id;
+  const inMyChats = { $or: [{ senderId: myId }, { receiverId: myId }] };
+  const [photoMessages, requests] = await Promise.all([
+    Message.find({ ...inMyChats, image: { $exists: true, $ne: "" } }).select("image").lean(),
+    FriendRequest.find({ $or: [{ from: myId }, { to: myId }] }).lean(),
+  ]);
+
+  await Promise.all([
+    Message.deleteMany(inMyChats),
+    FriendRequest.deleteMany({ $or: [{ from: myId }, { to: myId }] }),
+    User.updateMany({ friends: myId }, { $pull: { friends: myId } }),
+  ]);
+  await User.deleteOne({ _id: myId });
+
+  res.json({ success: true, message: "Your account has been deleted" });
+
+  // After replying: update other people's screens and clean up photos
+  for (const friendId of me.friends) emitToUser(friendId, "friendRemoved", { userId: String(myId) });
+  for (const r of requests) {
+    const otherId = r.from.equals(myId) ? r.to : r.from;
+    emitToUser(otherId, "friendRequestRemoved", { requestId: r._id });
+  }
+  disconnectUser(myId, "accountDeleted");
+  deleteImages([me.profilePic, ...photoMessages.map((m) => m.image)]);
 };

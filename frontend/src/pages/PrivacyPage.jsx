@@ -66,10 +66,11 @@ const PrivacyPage = () => (
 
     <Section title="5. Data retention">
       <p>
-        We keep your account information and messages for as long as your account is active. If you ask us to
-        delete your account, we will delete or anonymise your personal information within a reasonable period,
-        unless we need to keep some of it to meet legal obligations, resolve disputes or enforce our agreements.
-        Messages you sent may remain visible to their recipients.
+        We keep your account information and messages for as long as your account is active. You can delete your
+        account at any time from Edit profile. When you do, we delete your profile, your conversations (for you
+        and the people you chatted with), the photos shared in them, and your friend connections. Copies may
+        remain in backups or logs for a limited time before they are removed, and we may keep some information
+        where the law requires it.
       </p>
     </Section>
 
@@ -88,7 +89,7 @@ const PrivacyPage = () => (
         items={[
           "Access the personal information we hold about you.",
           "Correct inaccurate information (you can edit your name, username, bio and photo at any time from Edit profile).",
-          "Delete your account and personal information.",
+          "Delete your account and personal information (you can do this yourself from Edit profile).",
           "Object to or restrict certain processing, or withdraw consent where processing is based on consent.",
           "Receive a copy of your information in a portable format.",
           "Complain to your local data protection authority.",
