@@ -65,10 +65,10 @@ try {
   process.exit(1);
 }
 
-if (process.env.NODE_ENV !== "production") {
+// Start listening everywhere (local, Render, etc.) except Vercel, which runs the exported server itself
+if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => console.log(`Server is running on PORT: ${PORT}`));
 }
 
-// Export server for Vercel
 export default server;
